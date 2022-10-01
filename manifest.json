@@ -1,0 +1,11 @@
+{
+  "name": "FigDone",
+  "id": "1156717973531553701",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": [
+    "figma",
+    "figjam"
+  ],
+  "ui": "ui.html"
+}

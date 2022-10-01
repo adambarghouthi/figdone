@@ -1,0 +1,513 @@
+<div class="container">
+  <div class="nav-bar">
+    <div class="nav-title">
+      <h5>Frame</h5>
+    </div>
+    <div class="filter-container">
+      <div class="dropdown">
+        <button
+          class="dropbtn all"
+          id="filterDropdown"
+          data-id="000"
+        >
+          All
+          <div class="down-arrow" />
+        </button>
+        <div
+          class="dropdown-content"
+          id="btnDropdown 000"
+        >
+          <a id="dropdownItem" data-filter="all" data-id="000">
+            All
+          </a>
+          <a id="dropdownItem" data-filter="to-do" data-id="000">
+            To-do
+          </a>
+          <a id="dropdownItem" data-filter="doing" data-id="000">
+            Doing
+          </a>
+          <a id="dropdownItem" data-filter="done" data-id="000">
+            Done
+          </a>
+          <a id="dropdownItem" data-filter="blocked" data-id="000">
+            Blocked
+          </a>
+          <a id="dropdownItem" data-filter="cancelled" data-id="000">
+            Cancelled
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <table id="framesTable"></table>
+</div>
+
+<script>
+  let frames,
+      selectedDropBtnId,
+      selectedFilter = 'all';
+
+  const selectedFrames = [];
+
+  const selectIconSVG = '<svg width="12" height="12" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 1.5V8.5H1.5V1.5H8.5ZM9.5 0.5H0.5V9.5H9.5V0.5Z" fill="#060308"/></svg>';
+  const selectedIconSVG = '<svg width="12" height="12" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 0.5H0.5V9.5H9.5V0.5ZM4 7.5L1.5 5L2.205 4.295L4 6.085L7.795 2.29L8.5 3L4 7.5Z" fill="#23ADE8"/></svg>';
+
+  const statusIcons = [
+    '⚪', // to-do
+    '🟡', // doing
+    '✅', // done
+    '⛔', // blocked
+    '☠️' // cancelled
+  ];
+  const statusKeyToIcon = {
+    'to-do': '⚪',
+    'doing': '🟡',
+    'done': '✅',
+    'blocked': '⛔',
+    'cancelled': '☠️'
+  };
+  const statusIconToKey = {
+    '⚪': 'to-do',
+    '🟡': 'doing',
+    '✅': 'done',
+    '⛔': 'blocked',
+    '☠️': 'cancelled'
+  };
+  const statusKeyToLabel = {
+    'to-do': 'To Do',
+    doing: 'Doing',
+    done: 'Done',
+    blocked: 'Blocked',
+    cancelled: 'Cancelled'
+  };
+
+  /* Maps one or many frames from { id, name } into an array of or object of { id, name, status, icon }  */
+  function formatFrames(f) {
+    if (!f) return;
+ 
+    let formattedFrames = f;
+
+    if (!Array.isArray(f)) {
+      formattedFrames = [f];
+    }
+
+    formattedFrames = formattedFrames.map((f) => {
+      /*
+        Use regex to find the bracketed status icon in the frame name.
+        The [0] result is the icon, the [1] result is the icon with brackets around it.
+      */
+      const regex = /\[(.*?)]/g;
+      const match = regex.exec(f.name);
+
+      const statusIcon = match?.[1] || statusIcons[0]; // if no match, default to to-do icon
+
+      return {
+        id: f.id,
+        name: f.name.replace(regex, ''), // remove bracketed status for display name
+        status: statusIconToKey[statusIcon],
+        icon: statusIcon
+      };
+    });
+
+    if (!Array.isArray(f)) {
+      return formattedFrames[0];
+    } else {
+      return formattedFrames;
+    }
+  }
+
+  /* Removes all table rows */
+  function clearTable() {
+    removeDropdownItemListeners(selectedDropBtnId);
+    removeFrameBtnListeners();
+    removeDropdownListeners();
+
+    const rows = document.querySelectorAll('.frames-row');
+    rows.forEach((row) => row.outerHTML = '');
+
+    selectedDropBtnId = undefined;
+  }
+
+  /* Renders all frames as rows to frames table by filter */
+  function populateTable() {
+    let filteredFrames = frames;
+
+    /* Only render frames that match selectedFilter */
+    if (selectedFilter !== 'all') {
+      filteredFrames = frames.filter((f) => f.status === selectedFilter);
+    }
+
+    const framesTable = document.getElementById('framesTable');
+
+    if (!filteredFrames.length) {
+      /* Create row with 1 cells */
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+
+      row.className = 'frames-row';
+      cell.className = 'col-c';
+
+      cell.innerHTML = `
+        <h1>😵‍💫</h1>
+        <p>
+          No frames in '${statusKeyToLabel[selectedFilter]}'
+        </p>
+      `;
+
+      row.appendChild(cell);
+      framesTable.appendChild(row);
+
+      return;
+    }
+
+    filteredFrames.forEach((f) => {
+      /* Create row with 2 cells */
+      const row = document.createElement("tr");
+      const cell1 = document.createElement("td");
+      const cell2 = document.createElement("td");
+
+      row.className = 'frames-row'
+      cell1.className = 'col-l';
+      cell2.className = 'col-r';
+
+      /* First cell has select button and frame name */
+      cell1.innerHTML = `
+        <p class="${f.status}">
+          <a id="frameBtn" data-id="${f.id}">
+            ${f.name}
+          </a>
+        </p>
+      `;
+
+      /* Second cell has dropdown btn for status selection */
+      cell2.innerHTML = `
+        <div class="dropdown">
+          <button
+            class="dropbtn ${f.status}"
+            id="statusDropdown"
+            data-id="${f.id}"
+          >
+            ${statusKeyToLabel[f.status]}
+            <div class="down-arrow" />
+          </button>
+          <div
+            class="dropdown-content"
+            id="btnDropdown ${f.id}"
+          >
+            <a id="dropdownItem" data-id="${f.id}">
+              ${f.status === 'to-do' ? '<span>&#10004;</span>' : '' }
+              To-do
+            </a>
+            <a id="dropdownItem" data-id="${f.id}">
+              ${f.status === 'doing' ? '<span>&#10004;</span>' : '' }
+              Doing
+            </a>
+            <a id="dropdownItem" data-id="${f.id}">
+              ${f.status === 'done' ? '<span>&#10004;</span>' : '' }
+              Done
+            </a>
+            <a id="dropdownItem" data-id="${f.id}">
+              ${f.status === 'blocked' ? '<span>&#10004;</span>' : '' }
+              Blocked
+            </a>
+            <a id="dropdownItem" data-id="${f.id}">
+              ${f.status === 'cancelled' ? '<span>&#10004;</span>' : '' }
+              Cancelled
+            </a>
+          </div>
+        </div>
+      `;
+      
+      row.appendChild(cell1);
+      row.appendChild(cell2);
+      framesTable.appendChild(row);
+    });
+
+    addFrameBtnListeners();
+    addDropdownListeners();
+  }
+
+  function onFrameBtnClick(e) {
+    parent.postMessage({ pluginMessage: {
+      type: 'focus-frame',
+      frameId: e.target.dataset.id,
+    } }, '*');
+  }
+
+  /* Add frame btn listeners */
+  function addFrameBtnListeners() {
+    const frameBtns = document.querySelectorAll("#frameBtn");
+
+    frameBtns.forEach((b) => {
+      b.onclick = onFrameBtnClick;
+    });
+  }
+
+  /* Remove frame btn listeners */
+  function removeFrameBtnListeners() {
+    const frameBtns = document.querySelectorAll("#frameBtn");
+
+    frameBtns.forEach((b) => {
+      b.removeEventListener('onclick', onFrameBtnClick);
+    });
+  }
+
+  function onDropdownClick(e) {
+    const { id } = e.target.dataset;
+    const isSelected = id === selectedDropBtnId;
+
+    // hide any showing dropdowns
+    hideDropdown();
+
+    // show new dropdown
+    if (!isSelected) {
+      // add dropdown item listeners before showing dropdown content
+      addDropdownItemListeners(id);
+      document.getElementById(`btnDropdown ${id}`).classList.toggle("show");
+
+      // save the selected dropdown id in order to close it
+      selectedDropBtnId = id;
+    }
+  }
+
+  /* Add dropdown event listeners */
+  function addDropdownListeners() {
+    const dropdowns = document.querySelectorAll("#statusDropdown");
+
+    dropdowns.forEach((d) => {
+      d.onclick = onDropdownClick;
+    });
+  }
+
+  /* Remove dropdown event listeners */
+  function removeDropdownListeners() {
+    const dropdowns = document.querySelectorAll("#statusDropdown");
+
+    dropdowns.forEach((d) => {
+      d.removeEventListener('onclick', onDropdownClick);
+    });
+  }
+
+  /* Add dropdown item event listeners */
+  function addDropdownItemListeners(id) {
+    if (!id) return;
+
+    const dropdownItems = document.querySelectorAll('#dropdownItem', `[data-id="${id}"]`);
+    
+    dropdownItems.forEach((dI) => {
+      dI.onclick = onDropdownItemClick;
+    });
+  }
+
+  /* Remove dropdown item event listeners to avoid too many event listeners */
+  function removeDropdownItemListeners(id) {
+    if (!id) return;
+
+    const dropdownItems = document.querySelectorAll('#dropdownItem', `[data-id="${id}"]`);
+    
+    dropdownItems.forEach((dI) => {
+      dI.removeEventListener('click', onDropdownItemClick);
+    });
+  }
+
+  // Handler for dropdown item clicks 
+  function onDropdownItemClick(e) {
+    const { id } = e.target.dataset;
+    
+    // Filter dropdown item
+    if (id === "000") {
+      const { filter } = e.target.dataset;
+
+      selectedFilter = filter;
+
+      const filterDropdown = document.getElementById('filterDropdown');
+
+      filterDropdown.firstChild.nodeValue = statusKeyToLabel[filter] || 'All';
+      filterDropdown.className = `dropbtn ${filter}`;
+
+      clearTable();
+      populateTable();
+    } else { // Status dropdown item
+      const newStatus = e.target.lastChild.nodeValue.trim().toLowerCase();
+      const newStatusIcon = statusKeyToIcon[newStatus];
+
+      parent.postMessage({ pluginMessage: {
+        type: 'update-status',
+        frameId: selectedDropBtnId,
+        newStatusIcon: newStatusIcon
+      } }, '*');
+    }
+
+    removeDropdownItemListeners(selectedDropBtnId);
+    selectedDropBtnId = undefined;
+  }
+
+  function hideDropdown() {
+    const dropdown = document.getElementsByClassName('show')?.[0];
+
+    if (dropdown) {
+      dropdown.classList.toggle("show");
+      removeDropdownItemListeners(dropdown.dataset.id);
+      selectedDropBtnId = undefined;
+    }
+  }
+
+  /* Receiver for messages from plugin */
+  onmessage = (event) => {
+    const { message, ...data } = event.data.pluginMessage;
+    console.log(message);
+
+    if (message === 'update-table') {
+      clearTable();
+
+      frames = formatFrames(data.frames);
+
+      populateTable();
+    }
+  }
+
+  document.getElementById('filterDropdown').onclick = onDropdownClick;
+
+  document.onclick = (e) => {
+    const { id } = e.target;
+
+    if (!id.includes('statusDropdown') &&
+      !id.includes('filterDropdown')) {
+      hideDropdown();
+    }
+  };
+</script>
+
+<style>
+  * { font-family: Inter, sans-serif; }
+  table { width: 100%; }
+  td { padding: 8 0; font-size: 13.33px; }
+  h5.table-header {
+    padding-top: 15px;
+    margin-top: 15px;
+    border-top: 0.5px solid rgba(0, 0, 0, 0.65);
+  }
+
+  .col-l { text-align: left; }
+  .col-r { text-align: right; }
+  .col-c { text-align: center; }
+
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    left: 0;
+    height: 40px;
+    width: 100%;
+    padding: 0 8px;
+    background-color: white;
+    border-bottom: thin solid rgba(6, 3, 8, 0.5);
+  }
+
+  .nav-title {
+    display: flex;
+    align-items: center;
+  }
+
+  .filter-container {
+    margin-right: 18px;
+  }
+
+  #framesTable {
+    margin-top: 45px;
+  }
+
+  .nav-title > #frameSelect {
+    margin-right: 5px;
+  }
+
+  #frameBtn {
+    cursor: pointer;
+  }
+
+  /* Dropdown Button */
+  .dropbtn {
+    display: flex;
+    align-items: center;
+    border-radius: 3px;
+    padding: 4 6;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* Dropdown button on hover & focus */
+  .dropbtn:hover, .dropbtn:focus {
+    opacity: 0.80;
+  }
+
+  /* The container <div> - needed to position the dropdown content */
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  /* Dropdown Content (Hidden by Default) */
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    text-align: right;
+    min-width: 100px;
+    right: 0;
+    background-color: white;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+    border-radius: 3px;
+    border: thin solid #DBDBDB;
+    padding: 5 0;
+    z-index: 1;
+  }
+
+  /* Links inside the dropdown */
+  .dropdown-content a {
+    font-size: 13.33px;
+    color: black;
+    padding: 6 6;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+  }
+
+  /* Change color of dropdown links on hover */
+  .dropdown-content a:hover { background-color: #DFDFDF; }
+
+  /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+  .show { display: block; }
+
+  button.to-do {
+    background-color: transparent;
+    border: 0.5px solid rgba(6, 3, 8, 0.5);
+    color: rgba(6, 3, 8, 0.5);
+  }
+  button.doing { background-color: #FFDB5B; color: rgba(6, 3, 8, 0.5); }
+  button.done { background-color: #1ABF7B; color: white; }
+  button.blocked { background-color: #EC6D60; color: white; }
+  button.cancelled { background-color: #C8C8C8; color: rgba(6, 3, 8, 0.5); }
+  button.all { background-color: transparent; }
+
+  p.to-do { color: rgba(6, 3, 8, 0.5); }
+
+  .down-arrow {
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    margin-left: 5;
+  }
+  .dropbtn.all > .down-arrow,
+  .dropbtn.to-do > .down-arrow,
+  .dropbtn.doing > .down-arrow,
+  .dropbtn.cancelled > .down-arrow {
+    border-top: 4px solid rgba(6, 3, 8, 0.5);
+  }
+  .dropbtn.done > .down-arrow,
+  .dropbtn.blocked > .down-arrow {
+    border-top: 4px solid white;
+  }
+</style>
