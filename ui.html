@@ -364,6 +364,14 @@
 
       populateTable();
     }
+
+    if (message === 'scroll-to-frame') {
+      const { frameId } = data;
+
+      const frameRow = document.querySelector(`[data-id="${frameId}"]`);
+      const y = frameRow.getBoundingClientRect().top + window.pageYOffset - 55;
+      window.scrollTo({top: y, behavior: 'smooth'});
+    }
   }
 
   document.getElementById('filterDropdown').onclick = onDropdownClick;
