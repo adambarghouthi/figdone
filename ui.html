@@ -497,11 +497,7 @@
   /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
   .show { display: block; }
 
-  button.to-do {
-    background-color: transparent;
-    border: 0.5px solid rgba(6, 3, 8, 0.5);
-    color: rgba(6, 3, 8, 0.5);
-  }
+  button.to-do { background-color: transparent; border: 0.5px solid black; }
   button.doing { background-color: #FFDB5B; color: rgba(6, 3, 8, 0.5); }
   button.done { background-color: #1ABF7B; color: white; }
   button.blocked { background-color: #EC6D60; color: white; }
@@ -513,7 +509,10 @@
     color: rgba(6, 3, 8, 0.5);
   }
 
-  p.to-do { color: rgba(6, 3, 8, 0.5); }
+  p.no-status,
+  p.archived {
+    color: rgba(6, 3, 8, 0.5);
+  }
 
   .down-arrow {
     width: 0;
@@ -522,9 +521,12 @@
     border-right: 4px solid transparent;
     margin-left: 5;
   }
+  .dropbtn.to-do > .down-arrow {
+    border-top: 4px solid black;
+  }
   .dropbtn.all > .down-arrow,
-  .dropbtn.to-do > .down-arrow,
   .dropbtn.doing > .down-arrow,
+  .dropbtn.archived > .down-arrow,
   .dropbtn.no-status > .down-arrow {
     border-top: 4px solid rgba(6, 3, 8, 0.5);
   }
