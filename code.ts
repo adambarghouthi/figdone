@@ -61,7 +61,10 @@ if (figma.editorType === 'figma') {
           const regex = /\[(.*?)]/g;
           const strippedName = f.name.replace(regex, "").trim();
 
-          f.name = `[${newStatusIcon}] ${strippedName}`;
+          f.name = newStatusIcon
+            ? `[${newStatusIcon}] ${strippedName}`
+            : strippedName;
+
           updateFrames();
         }
       });
