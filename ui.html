@@ -42,7 +42,7 @@
       </div>
     </div>
   </div>
-  <table id="framesTable"></table>
+  <table id="framesTable" border="0" cellspacing="0"></table>
 </div>
 
 <script>
@@ -171,7 +171,8 @@
       const cell1 = document.createElement("td");
       const cell2 = document.createElement("td");
 
-      row.className = 'frames-row'
+      row.className = 'frames-row';
+      row.dataset.id = f.id;
       cell1.className = 'col-l';
       cell2.className = 'col-r';
 
@@ -377,9 +378,15 @@
     if (message === 'scroll-to-frame') {
       const { frameId } = data;
 
-      const frameRow = document.querySelector(`[data-id="${frameId}"]`);
-      const y = frameRow.getBoundingClientRect().top + window.pageYOffset - 55;
+      const frameRow = document.querySelector(`tr.frames-row[data-id="${frameId}"]`);
+      frameRow.classList.toggle("highlighted");
+      const y = frameRow.getBoundingClientRect().top + window.pageYOffset - 40;
+
       window.scrollTo({top: y, behavior: 'smooth'});
+
+      setTimeout(() => {
+        frameRow.classList.toggle("highlighted");
+      }, 2000);
     }
   }
 
@@ -397,8 +404,9 @@
 
 <style>
   * { font-family: Inter, sans-serif; }
-  table { width: 100%; }
-  td { padding: 8 0; font-size: 13.33px; }
+  body { margin: 0; }
+  table { width: 100%; margin-bottom: 2px; }
+  td { padding: 8 8; font-size: 13.33px; border: none; }
   h5.table-header {
     padding-top: 15px;
     margin-top: 15px;
@@ -430,7 +438,7 @@
   }
 
   .filter-container {
-    margin-right: 18px;
+    margin-right: 16px;
   }
 
   #framesTable {
@@ -443,6 +451,10 @@
 
   #frameBtn {
     cursor: pointer;
+  }
+
+  .frames-row.highlighted {
+    background: #E5F4FE;
   }
 
   /* Dropdown Button */
@@ -504,7 +516,7 @@
   button.archived { background-color: #C8C8C8; color: rgba(6, 3, 8, 0.5); }
   button.all { background-color: transparent; }
   button.no-status {
-    background-color: transparent;
+    background-color: white;
     border: 0.5px solid rgba(6, 3, 8, 0.5);
     color: rgba(6, 3, 8, 0.5);
   }
