@@ -104,7 +104,7 @@
       const match = regex.exec(f.name);
 
       const statusIcon = match?.[1];
-      const statusKey = statusIcon ? statusIconToKey[statusIcon] : 'no-status';
+      const statusKey = statusIcons.includes(statusIcon) ? statusIconToKey[statusIcon] : 'no-status';
 
       return {
         id: f.id,
