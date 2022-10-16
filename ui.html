@@ -375,18 +375,26 @@
       populateTable();
     }
 
-    if (message === 'scroll-to-frame') {
-      const { frameId } = data;
+    if (message === 'highlight-frames') {
+      const { frames } = data;
 
-      const frameRow = document.querySelector(`tr.frames-row[data-id="${frameId}"]`);
-      frameRow.classList.toggle("highlighted");
-      const y = frameRow.getBoundingClientRect().top + window.pageYOffset - 40;
+      // remove highlight from previously highlighted frames
+      const highlightedFrames = document.querySelectorAll('.highlighted');
+      highlightedFrames.forEach((row) => row.classList.toggle('highlighted'));
+      
+      // highlight new selected frames
+      if (frames.length) {
+        const frameRowsToHighlight = document.querySelectorAll(frames.map((fId) => `tr.frames-row[data-id="${fId}"]`).join(', '));
+        frameRowsToHighlight.forEach((row) => row.classList.toggle('highlighted'));
+      }
 
-      window.scrollTo({top: y, behavior: 'smooth'});
+      // scroll to frame if only one is selected
+      if (frames.length === 1) {
+        const frameRow = document.querySelector(`tr.frames-row[data-id="${frames[0]}"]`);
+        const y = frameRow.getBoundingClientRect().top + window.pageYOffset - 40;
 
-      setTimeout(() => {
-        frameRow.classList.toggle("highlighted");
-      }, 2000);
+        window.scrollTo({top: y, behavior: 'smooth'});
+      }
     }
   }
 
