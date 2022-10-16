@@ -31,13 +31,17 @@ figma.ui.resize(300, 390);
 updateFrames();
 
 figma.on("selectionchange", () => {
-  updateFrames();
-
   const { selection } = figma.currentPage;
 
-  const frames = selection.map((f) => f.id);
+  const isFrame = figma.currentPage.children.filter((f) =>
+    selection.find((s) =>
+      s.id === f.id))?.[0];
 
-  highlightFrames(frames);
+  if (isFrame) {
+    const frames = selection.map((s) => s.id);
+    updateFrames();
+    highlightFrames(frames);
+  }
 });
 
 // Calls to "parent.postMessage" from within the HTML page will trigger this
