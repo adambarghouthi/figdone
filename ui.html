@@ -32,14 +32,17 @@
           <a id="dropdownItem" data-filter="blocked" data-id="000">
             Blocked
           </a>
-          <a id="dropdownItem" data-filter="cancelled" data-id="000">
-            Cancelled
+          <a id="dropdownItem" data-filter="archived" data-id="000">
+            Archived
+          </a>
+          <a id="dropdownItem" data-filter="no-status" data-id="000">
+            No status
           </a>
         </div>
       </div>
     </div>
   </div>
-  <table id="framesTable"></table>
+  <table id="framesTable" border="0" cellspacing="0"></table>
 </div>
 
 <script>
@@ -57,28 +60,29 @@
     '🟡', // doing
     '✅', // done
     '⛔', // blocked
-    '☠️' // cancelled
+    '📁' // archived
   ];
   const statusKeyToIcon = {
     'to-do': '⚪',
     'doing': '🟡',
     'done': '✅',
     'blocked': '⛔',
-    'cancelled': '☠️'
+    'archived': '📁'
   };
   const statusIconToKey = {
     '⚪': 'to-do',
     '🟡': 'doing',
     '✅': 'done',
     '⛔': 'blocked',
-    '☠️': 'cancelled'
+    '📁': 'archived'
   };
   const statusKeyToLabel = {
     'to-do': 'To Do',
     doing: 'Doing',
     done: 'Done',
     blocked: 'Blocked',
-    cancelled: 'Cancelled'
+    archived: 'Archived',
+    'no-status': 'No status',
   };
 
   /* Maps one or many frames from { id, name } into an array of or object of { id, name, status, icon }  */
@@ -99,12 +103,13 @@
       const regex = /\[(.*?)]/g;
       const match = regex.exec(f.name);
 
-      const statusIcon = match?.[1] || statusIcons[0]; // if no match, default to to-do icon
+      const statusIcon = match?.[1];
+      const statusKey = statusIcons.includes(statusIcon) ? statusIconToKey[statusIcon] : 'no-status';
 
       return {
         id: f.id,
         name: f.name.replace(regex, ''), // remove bracketed status for display name
-        status: statusIconToKey[statusIcon],
+        status: statusKey,
         icon: statusIcon
       };
     });
@@ -166,7 +171,8 @@
       const cell1 = document.createElement("td");
       const cell2 = document.createElement("td");
 
-      row.className = 'frames-row'
+      row.className = 'frames-row';
+      row.dataset.id = f.id;
       cell1.className = 'col-l';
       cell2.className = 'col-r';
 
@@ -211,8 +217,12 @@
               Blocked
             </a>
             <a id="dropdownItem" data-id="${f.id}">
-              ${f.status === 'cancelled' ? '<span>&#10004;</span>' : '' }
-              Cancelled
+              ${f.status === 'archived' ? '<span>&#10004;</span>' : '' }
+              Archived
+            </a>
+            <a id="dropdownItem" data-id="${f.id}">
+              ${f.status === 'no-status' ? '<span>&#10004;</span>' : '' }
+              No status
             </a>
           </div>
         </div>
@@ -365,12 +375,26 @@
       populateTable();
     }
 
-    if (message === 'scroll-to-frame') {
-      const { frameId } = data;
+    if (message === 'highlight-frames') {
+      const { frames } = data;
 
-      const frameRow = document.querySelector(`[data-id="${frameId}"]`);
-      const y = frameRow.getBoundingClientRect().top + window.pageYOffset - 55;
-      window.scrollTo({top: y, behavior: 'smooth'});
+      // remove highlight from previously highlighted frames
+      const highlightedFrames = document.querySelectorAll('.highlighted');
+      highlightedFrames.forEach((row) => row.classList.toggle('highlighted'));
+      
+      // highlight new selected frames
+      if (frames.length) {
+        const frameRowsToHighlight = document.querySelectorAll(frames.map((fId) => `tr.frames-row[data-id="${fId}"]`).join(', '));
+        frameRowsToHighlight.forEach((row) => row.classList.toggle('highlighted'));
+      }
+
+      // scroll to frame if only one is selected
+      if (frames.length === 1) {
+        const frameRow = document.querySelector(`tr.frames-row[data-id="${frames[0]}"]`);
+        const y = frameRow.getBoundingClientRect().top + window.pageYOffset - 40;
+
+        window.scrollTo({top: y, behavior: 'smooth'});
+      }
     }
   }
 
@@ -388,8 +412,9 @@
 
 <style>
   * { font-family: Inter, sans-serif; }
-  table { width: 100%; }
-  td { padding: 8 0; font-size: 13.33px; }
+  body { margin: 0; }
+  table { width: 100%; margin-bottom: 2px; }
+  td { padding: 8 8; font-size: 13.33px; border: none; }
   h5.table-header {
     padding-top: 15px;
     margin-top: 15px;
@@ -421,7 +446,7 @@
   }
 
   .filter-container {
-    margin-right: 18px;
+    margin-right: 16px;
   }
 
   #framesTable {
@@ -434,6 +459,10 @@
 
   #frameBtn {
     cursor: pointer;
+  }
+
+  .frames-row.highlighted {
+    background: #E5F4FE;
   }
 
   /* Dropdown Button */
@@ -488,18 +517,22 @@
   /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
   .show { display: block; }
 
-  button.to-do {
-    background-color: transparent;
-    border: 0.5px solid rgba(6, 3, 8, 0.5);
-    color: rgba(6, 3, 8, 0.5);
-  }
+  button.to-do { background-color: transparent; border: 0.5px solid black; }
   button.doing { background-color: #FFDB5B; color: rgba(6, 3, 8, 0.5); }
   button.done { background-color: #1ABF7B; color: white; }
   button.blocked { background-color: #EC6D60; color: white; }
-  button.cancelled { background-color: #C8C8C8; color: rgba(6, 3, 8, 0.5); }
+  button.archived { background-color: #C8C8C8; color: rgba(6, 3, 8, 0.5); }
   button.all { background-color: transparent; }
+  button.no-status {
+    background-color: white;
+    border: 0.5px solid rgba(6, 3, 8, 0.5);
+    color: rgba(6, 3, 8, 0.5);
+  }
 
-  p.to-do { color: rgba(6, 3, 8, 0.5); }
+  p.no-status,
+  p.archived {
+    color: rgba(6, 3, 8, 0.5);
+  }
 
   .down-arrow {
     width: 0;
@@ -508,10 +541,13 @@
     border-right: 4px solid transparent;
     margin-left: 5;
   }
+  .dropbtn.to-do > .down-arrow {
+    border-top: 4px solid black;
+  }
   .dropbtn.all > .down-arrow,
-  .dropbtn.to-do > .down-arrow,
   .dropbtn.doing > .down-arrow,
-  .dropbtn.cancelled > .down-arrow {
+  .dropbtn.archived > .down-arrow,
+  .dropbtn.no-status > .down-arrow {
     border-top: 4px solid rgba(6, 3, 8, 0.5);
   }
   .dropbtn.done > .down-arrow,
