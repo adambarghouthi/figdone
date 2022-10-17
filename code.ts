@@ -73,6 +73,7 @@ figma.ui.onmessage = (msg) => {
     const frame = figma.currentPage.children.find((f) => f.id === frameId);
     if (frame) {
       figma.viewport.scrollAndZoomIntoView([frame]);
+      figma.currentPage.selection = [frame];
     }
   }
 
