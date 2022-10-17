@@ -44,6 +44,10 @@ figma.on("selectionchange", () => {
   }
 });
 
+figma.on("currentpagechange", () => {
+  updateFrames();
+});
+
 // Calls to "parent.postMessage" from within the HTML page will trigger this
 // callback. The callback will be passed the "pluginMessage" property of the
 // posted message.
