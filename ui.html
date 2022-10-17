@@ -32,8 +32,8 @@
           <a id="dropdownItem" data-filter="blocked" data-id="000">
             Blocked
           </a>
-          <a id="dropdownItem" data-filter="archived" data-id="000">
-            Archived
+          <a id="dropdownItem" data-filter="cancelled" data-id="000">
+            Cancelled
           </a>
           <a id="dropdownItem" data-filter="no-status" data-id="000">
             No status
@@ -60,28 +60,28 @@
     '🟡', // doing
     '✅', // done
     '⛔', // blocked
-    '📁' // archived
+    '☠️' // cancelled
   ];
   const statusKeyToIcon = {
     'to-do': '⚪',
     'doing': '🟡',
     'done': '✅',
     'blocked': '⛔',
-    'archived': '📁'
+    'cancelled': '☠️'
   };
   const statusIconToKey = {
     '⚪': 'to-do',
     '🟡': 'doing',
     '✅': 'done',
     '⛔': 'blocked',
-    '📁': 'archived'
+    '☠️': 'cancelled'
   };
   const statusKeyToLabel = {
     'to-do': 'To Do',
     doing: 'Doing',
     done: 'Done',
     blocked: 'Blocked',
-    archived: 'Archived',
+    cancelled: 'Cancelled',
     'no-status': 'No status',
   };
 
@@ -217,8 +217,8 @@
               Blocked
             </a>
             <a id="dropdownItem" data-id="${f.id}">
-              ${f.status === 'archived' ? '<span>&#10004;</span>' : '' }
-              Archived
+              ${f.status === 'cancelled' ? '<span>&#10004;</span>' : '' }
+              Cancelled
             </a>
             <a id="dropdownItem" data-id="${f.id}">
               ${f.status === 'no-status' ? '<span>&#10004;</span>' : '' }
@@ -521,7 +521,7 @@
   button.doing { background-color: #FFDB5B; color: rgba(6, 3, 8, 0.5); }
   button.done { background-color: #1ABF7B; color: white; }
   button.blocked { background-color: #EC6D60; color: white; }
-  button.archived { background-color: #C8C8C8; color: rgba(6, 3, 8, 0.5); }
+  button.cancelled { background-color: #C8C8C8; color: rgba(6, 3, 8, 0.5); }
   button.all { background-color: transparent; }
   button.no-status {
     background-color: white;
@@ -530,7 +530,7 @@
   }
 
   p.no-status,
-  p.archived {
+  p.cancelled {
     color: rgba(6, 3, 8, 0.5);
   }
 
@@ -546,7 +546,7 @@
   }
   .dropbtn.all > .down-arrow,
   .dropbtn.doing > .down-arrow,
-  .dropbtn.archived > .down-arrow,
+  .dropbtn.cancelled > .down-arrow,
   .dropbtn.no-status > .down-arrow {
     border-top: 4px solid rgba(6, 3, 8, 0.5);
   }
