@@ -83,7 +83,7 @@ function Plugin(props: {
 
       <div class="container">
         {
-          frames.map((f) => {
+          frames.map((f, fIdx) => {
             if (filter.value !== 'all' && f.status !== filter.value) {
               return null;
             }
@@ -100,6 +100,7 @@ function Plugin(props: {
                   {f.name}
                 </p>
                 <Dropdown
+                  contentPosition={fIdx > 4 && fIdx > frames.length - 5 ? 'up' : 'down'}
                   isShowing={openedDropdown === f.id}
                   value={constants.statusOptions.find((s) => s.value === f.status)}
                   options={constants.statusOptions}
