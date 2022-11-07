@@ -102,15 +102,26 @@ export default function () {
     }
   })
   on<UpdateStatusHandler>('UPDATE_STATUS', async function (frameId:string, icon:string) {
-    figma.currentPage.children.forEach((f) => {
-      if (f.id === frameId) {
+    for (let child of figma.currentPage.children) {
+      let frame;
+
+      if (child.type === 'SECTION') {
+        frame = child.children.find((c) => c.id === frameId);
+      }
+
+      if (child.id === frameId) {
+        frame = child;
+      }
+
+      if (frame) {
         const regex = /\[(.*?)]/g;
-        const strippedName = f.name.replace(regex, "").trim();
-        f.name = icon
+        const strippedName = frame.name.replace(regex, "").trim();
+        frame.name = icon
             ? `[${icon}] ${strippedName}`
             : strippedName;
+        break;
       }
-    });
+    }
 
     figma.ui.postMessage({
       message: 'update-frames',
