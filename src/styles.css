@@ -24,7 +24,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 8 15;
-  cursor: pointer;
 }
 
 .frame-item:hover {
@@ -40,6 +39,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.frame-name:hover {
+  cursor: pointer;
 }
 
 .empty-state {

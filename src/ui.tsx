@@ -21,7 +21,7 @@ function Plugin(props: {
   const [frames, setFrames] = useState<{ id:string, name:string, status:string }[]>(props.initialFrames);
   const [selectedFrames, setSelectedFrames] = useState<string[]>([]);
   const [filter, setFilter] = useState<{ label: string, value: string}>({ label: 'All', value: 'all' });
-  const frameRowRef = useRef<HTMLAnchorElement>(null);
+  const frameRowRef = useRef<HTMLDivElement>(null);
 
   const handleFrameClick = (frameId:string) => {
     emit("FOCUS_FRAME", frameId);
@@ -91,14 +91,16 @@ function Plugin(props: {
             const isSelected = selectedFrames.includes(f.id);
 
             return (
-              <a
+              <div
                 class={`frame-item ${isSelected ? 'selected' : ''}`}
                 ref={isSelected ? frameRowRef : undefined}
-                onClick={() => handleFrameClick(f.id)}
               >
-                <p class="frame-name">
+                <a
+                  class="frame-name"
+                  onClick={() => handleFrameClick(f.id)}
+                >
                   {f.name}
-                </p>
+                </a>
                 <Dropdown
                   contentPosition={fIdx > 4 && fIdx > frames.length - 5 ? 'up' : 'down'}
                   isShowing={openedDropdown === f.id}
@@ -107,7 +109,7 @@ function Plugin(props: {
                   onBtnClick={() => handleDropdown(f.id)}
                   onItemClick={(status) => handleStatusClick(f.id, status.value)}
                 />
-              </a>
+              </div>
             );
           })
         }
