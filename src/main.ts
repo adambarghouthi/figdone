@@ -50,7 +50,7 @@ function formatFrames() {
 export default function () {
   figma.on('selectionchange', () => {
     const { selection } = figma.currentPage;
-    
+
     const selectedFrames = selection.filter((s) => {
       const parentNode = getParentNode(s);
 
@@ -68,6 +68,11 @@ export default function () {
       message: 'select-frames',
       selectedFrames: formattedSelectedFrames
     });
+
+    figma.ui.postMessage({
+      message: 'update-frames',
+      frames: formatFrames()
+    });
   });
 
   figma.on("currentpagechange", () => {
@@ -78,7 +83,6 @@ export default function () {
   });
 
   on<FocusFrameHandler>('FOCUS_FRAME', function (frameId:string) {
-    
     for (let child of figma.currentPage.children) {
       let frame;
 
