@@ -2,6 +2,7 @@ import { h } from 'preact'
 import { Text } from '@create-figma-plugin/ui'
 
 interface Props {
+    contentPosition?: string,
     defaultValue?: {
         label: string,
         value: string
@@ -32,7 +33,9 @@ function Dropdown(props:Props) {
                     props.defaultValue.label}
                 <div class="dropdown-arrow" />
             </button>
-            <div class={`dropdown-content ${props.isShowing ? 'show' : ''}`}>
+            <div class={`dropdown-content
+                ${props.contentPosition || 'up'}
+                ${props.isShowing ? 'show' : ''}`}>
                 {
                     props.options.map((o) =>
                         <a
