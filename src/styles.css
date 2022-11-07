@@ -1,0 +1,163 @@
+.container {
+  margin-top: 40px;
+  overflow: auto;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  height: 40px;
+  width: 100%;
+  padding: 0 14 0 15;
+  background-color: var(--figma-color-bg);
+  border: thin solid var(--figma-color-border);
+}
+
+.frame-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8 15;
+  cursor: pointer;
+}
+
+.frame-item:hover {
+  background-color: var(--figma-color-bg-selected-hover);
+}
+.frame-item.selected {
+  background-color: var(--figma-color-bg-selected);
+}
+
+.frame-name {
+  max-width: 170px;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.empty-state {
+  margin-top: 30px;
+  text-align: center;
+}
+
+/* Dropdown Button */
+.dropdown-btn {
+  display: flex;
+  align-items: center;
+  border-radius: 3px;
+  padding: 2 6;
+  border: none;
+  cursor: pointer;
+}
+
+/* Dropdown button on hover & focus */
+.dropdown-btn:hover, .dropdown-btn:focus {
+  opacity: 0.80;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  text-align: right;
+  min-width: 100px;
+  right: 0;
+  background-color: var(--figma-color-bg);
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+  border-radius: 3px;
+  border: thin solid var(--figma-color-border);
+  padding: 0 0;
+  overflow: hidden;
+  z-index: 3;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  color: var(--figma-color-text);
+  padding: 8 6;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover { background-color: var(--figma-color-bg-hover); }
+
+.dropdown-arrow {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  margin-left: 5;
+}
+.dropdown-btn.to-do > .dropdown-arrow {
+  border-top: 4px solid var(--figma-color-text);
+}
+.dropdown-btn.all > .dropdown-arrow,
+.dropdown-btn.to-do > .dropdown-arrow,
+.dropdown-btn.no-status > .dropdown-arrow {
+  border-top: 4px solid var(--figma-color-text);
+}
+.dropdown-btn.done > .dropdown-arrow,
+.dropdown-btn.blocked > .dropdown-arrow {
+  border-top: 4px solid white;
+}
+
+.dropdown-btn.doing > .dropdown-arrow,
+.dropdown-btn.cancelled > .dropdown-arrow {
+  border-top: 4px solid rgba(6, 3, 8, 0.5);
+}
+
+/* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+.show { display: block; }
+
+
+.dropdown-btn.to-do {
+  background-color: transparent;
+  border: thin solid var(--figma-color-text);
+  color: var(--figma-color-text);
+}
+.dropdown-btn.doing {
+  background-color: #FFDB5B;
+  border: thin solid #FFDB5B;
+  color: rgba(6, 3, 8, 0.5);
+}
+.dropdown-btn.done {
+  background-color: #1ABF7B;
+  border: thin solid #1ABF7B;
+  color: white;
+}
+.dropdown-btn.blocked {
+  background-color: #EC6D60;
+  border: thin solid #EC6D60;
+  color: white;
+}
+.dropdown-btn.cancelled {
+  background-color: #C8C8C8;
+  border: thin solid #C8C8C8;
+  color: rgba(6, 3, 8, 0.5);
+}
+.dropdown-btn.all {
+  background-color: var(--figma-color-bg);
+  border: thin solid var(--figma-color-bg);
+  color: var(--figma-color-text);
+}
+.dropdown-btn.no-status {
+  background-color: var(--figma-color-bg);
+  border: thin solid var(--figma-color-border);
+  color: var(--figma-color-text);
+}
