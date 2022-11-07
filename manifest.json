@@ -1,0 +1,10 @@
+{
+  "api": "1.0.0",
+  "editorType": [
+    "figma"
+  ],
+  "id": "1159865715100399885",
+  "name": "FigDone",
+  "main": "build/main.js",
+  "ui": "build/ui.js"
+}
