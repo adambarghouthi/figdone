@@ -83,6 +83,10 @@
   z-index: 3;
 }
 
+.dropdown-content.up {
+  bottom: 22;
+}
+
 /* Links inside the dropdown */
 .dropdown-content a {
   display: flex;
