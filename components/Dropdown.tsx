@@ -34,7 +34,7 @@ function Dropdown(props:Props) {
                 <div class="dropdown-arrow" />
             </button>
             <div class={`dropdown-content
-                ${props.contentPosition || 'up'}
+                ${props.contentPosition ? props.contentPosition : 'down'}
                 ${props.isShowing ? 'show' : ''}`}>
                 {
                     props.options.map((o) =>
