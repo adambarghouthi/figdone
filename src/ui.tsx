@@ -91,7 +91,7 @@ function Plugin(props: {
 
               return false;
             })
-            .map((f, fIdx) => {
+            .map((f, fIdx, filteredFrames) => {
               const isSelected = selectedFrames.includes(f.id);
 
               return (
@@ -106,7 +106,7 @@ function Plugin(props: {
                     {f.name}
                   </a>
                   <Dropdown
-                    contentPosition={fIdx > 4 && fIdx > frames.length - 5 ? 'up' : 'down'}
+                    contentPosition={fIdx > 4 && fIdx > filteredFrames.length - 5 ? 'up' : 'down'}
                     isShowing={openedDropdown === f.id}
                     value={constants.statusOptions.find((s) => s.value === f.status)}
                     options={constants.statusOptions}
