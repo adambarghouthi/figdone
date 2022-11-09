@@ -83,35 +83,39 @@ function Plugin(props: {
 
       <div class="container">
         {
-          frames.map((f, fIdx) => {
-            if (filter.value !== 'all' && f.status !== filter.value) {
-              return null;
-            }
+          frames
+            .filter((f) => {
+              if (filter.value === 'all' || f.status === filter.value) {
+                return true;
+              }
 
-            const isSelected = selectedFrames.includes(f.id);
+              return false;
+            })
+            .map((f, fIdx) => {
+              const isSelected = selectedFrames.includes(f.id);
 
-            return (
-              <div
-                class={`frame-item ${isSelected ? 'selected' : ''}`}
-                ref={isSelected ? frameRowRef : undefined}
-              >
-                <a
-                  class="frame-name"
-                  onClick={() => handleFrameClick(f.id)}
+              return (
+                <div
+                  class={`frame-item ${isSelected ? 'selected' : ''}`}
+                  ref={isSelected ? frameRowRef : undefined}
                 >
-                  {f.name}
-                </a>
-                <Dropdown
-                  contentPosition={fIdx > 4 && fIdx > frames.length - 5 ? 'up' : 'down'}
-                  isShowing={openedDropdown === f.id}
-                  value={constants.statusOptions.find((s) => s.value === f.status)}
-                  options={constants.statusOptions}
-                  onBtnClick={() => handleDropdown(f.id)}
-                  onItemClick={(status) => handleStatusClick(f.id, status.value)}
-                />
-              </div>
-            );
-          })
+                  <a
+                    class="frame-name"
+                    onClick={() => handleFrameClick(f.id)}
+                  >
+                    {f.name}
+                  </a>
+                  <Dropdown
+                    contentPosition={fIdx > 4 && fIdx > frames.length - 5 ? 'up' : 'down'}
+                    isShowing={openedDropdown === f.id}
+                    value={constants.statusOptions.find((s) => s.value === f.status)}
+                    options={constants.statusOptions}
+                    onBtnClick={() => handleDropdown(f.id)}
+                    onItemClick={(status) => handleStatusClick(f.id, status.value)}
+                  />
+                </div>
+              );
+            })
         }
 
         {
