@@ -1,136 +1,170 @@
-import {
-  Text,
-  Bold,
-  render,
-} from '@create-figma-plugin/ui'
-import { emit } from '@create-figma-plugin/utilities'
-import { Fragment, h } from 'preact'
-import { useEffect, useState } from 'preact/hooks'
-import { useRef } from 'react'
+import { render } from "@create-figma-plugin/ui";
+import { emit } from "@create-figma-plugin/utilities";
+import { Fragment, h } from "preact";
+import { useEffect, useState } from "preact/hooks";
+import { useRef } from "react";
 
-import Dropdown from '../components/Dropdown'
-import * as constants from '../utils/constants'
+import Frames from "./pages/Frames";
+import Settings from "./pages/Settings";
+import Dropdown from "./components/Dropdown";
+import * as constants from "../utils/constants";
 
-import '!./styles.css'
-// import { InsertCodeHandler } from './types'
+import "!./styles.css";
+import airtable from "../utils/airtable";
 
 function Plugin(props: {
-  initialFrames: { id:string, name:string, status:string }[],
+  initialFrames: { id: string; name: string; status: string }[];
 }) {
-  const [openedDropdown, setOpenedDropdown] = useState<string>('');
-  const [frames, setFrames] = useState<{ id:string, name:string, status:string }[]>(props.initialFrames);
+  const [figmaUser, setFigmaUser] = useState<string>("");
+  const [figDoneUser, setFigDoneUser] = useState<any>();
+  const [statuses, setStatuses] = useState<any>();
+  const [apiKey, setApiKey] = useState<string>("");
+
+  const [openedDropdown, setOpenedDropdown] = useState<string>("");
+  const [frames, setFrames] = useState<
+    { id: string; name: string; status: string }[]
+  >(props.initialFrames);
   const [selectedFrames, setSelectedFrames] = useState<string[]>([]);
-  const [filter, setFilter] = useState<{ label: string, value: string}>({ label: 'All', value: 'all' });
-  const frameRowRef = useRef<HTMLDivElement>(null);
+  const [filter, setFilter] = useState<{ label: string; value: string }>({
+    label: "All",
+    value: "all",
+  });
+  const [navItem, setNavItem] = useState<string>("frames");
 
-  const handleFrameClick = (frameId:string) => {
-    emit("FOCUS_FRAME", frameId);
-  };
-
-  const handleStatusClick = (frameId:string, status:string) => {
-    setOpenedDropdown('');
-    emit("UPDATE_STATUS", frameId, constants.statusKeyToIcon[status]);
-  };
-
-  const handleDropdown = (id:string) => {
+  const handleDropdown = (id: string) => {
     if (id === openedDropdown) {
-      setOpenedDropdown('');
+      setOpenedDropdown("");
     } else {
       setOpenedDropdown(id);
     }
   };
-  
-  const handleFilter = (filter:{ label: string, value: string }) => {
-    setOpenedDropdown('');
+
+  const handleFilter = (filter: { label: string; value: string }) => {
+    setOpenedDropdown("");
     setFilter(filter);
   };
 
   onmessage = (event) => {
     const { message, ...data } = event.data.pluginMessage;
 
-    if (message === 'select-frames') {
+    if (message === "select-frames") {
       setSelectedFrames(data.selectedFrames);
     }
 
-    if (message === 'update-frames') {
+    if (message === "update-frames") {
       setFrames(data.frames);
     }
-  }
+
+    if (message === "set-user") {
+      setFigmaUser(data.user);
+    }
+  };
 
   useEffect(() => {
-    if (frameRowRef.current) {
-      window.scrollTo({top: frameRowRef.current.offsetTop - 40, behavior: 'smooth'});
+    const getData = async () => {
+      const userResult = await airtable("users").select(
+        `{figmaId}=${figmaUser}`
+      );
+
+      const user = userResult.data.records?.[0];
+
+      if (user) {
+        const apiKeyResult = await airtable("keys").select(
+          `RECORD_ID()="${user.fields.keys[0]}"`
+        );
+
+        setFigDoneUser(user);
+        setApiKey(apiKeyResult.data.records[0].fields.hash);
+      }
+    };
+
+    if (figmaUser) {
+      getData();
     }
-  }, [selectedFrames]);
+  }, [figmaUser]);
+
+  useEffect(() => {
+    const getStatuses = async () => {
+      const statusResults = await airtable("statuses").select(
+        `{keyString}=${apiKey}`
+      );
+
+      if (statusResults.data.records?.length) {
+        const statusOptions: [{ label: string; value: string; color: string }] =
+          statusResults.data.records.map((status: any) => ({
+            label: status.fields.label,
+            value: status.fields.value,
+            color: status.fields.color,
+          }));
+
+        const statusKeyToIcon: { [key: string]: string } = {};
+
+        statusResults.data.records.forEach(
+          (status: { fields: { value: string; emoji: string } }) => {
+            statusKeyToIcon[status.fields.value] = status.fields.emoji;
+          }
+        );
+
+        setStatuses({
+          statusOptions,
+          statusKeyToIcon,
+        });
+      }
+    };
+
+    if (apiKey) {
+      getStatuses();
+    }
+  }, [apiKey]);
+
+  useEffect(() => {
+    emit("GET_FIGMA_USER");
+  }, []);
 
   return (
     <Fragment>
       <div class="navbar">
-        <Text>
-          <Bold>Frame</Bold>
-        </Text>
-        <Dropdown
-          isShowing={openedDropdown === 'filter'}
-          value={filter}
-          options={[
-            { label: 'All', value: 'all' },
-            ...constants.statusOptions
-          ]}
-          onBtnClick={() => handleDropdown('filter')}
-          onItemClick={handleFilter}
+        <div class="navbar-menu">
+          <a
+            class={`navbar-item ${navItem === "frames" ? "selected" : ""}`}
+            onClick={() => setNavItem("frames")}
+          >
+            Frames
+          </a>
+          <a
+            class={`navbar-item ${navItem === "settings" ? "selected" : ""}`}
+            onClick={() => setNavItem("settings")}
+          >
+            Settings
+          </a>
+        </div>
+        {navItem === "frames" && (
+          <Dropdown
+            isShowing={openedDropdown === "filter"}
+            value={filter}
+            options={[
+              { label: "All", value: "all" },
+              ...constants.statusOptions,
+            ]}
+            onBtnClick={() => handleDropdown("filter")}
+            onItemClick={handleFilter}
+          />
+        )}
+      </div>
+
+      {navItem === "frames" && (
+        <Frames
+          filter={filter}
+          selectedFrames={selectedFrames}
+          frames={frames}
         />
-      </div>
+      )}
 
-      <div class="container">
-        {
-          frames
-            .filter((f) => {
-              if (filter.value === 'all' || f.status === filter.value) {
-                return true;
-              }
-
-              return false;
-            })
-            .map((f, fIdx, filteredFrames) => {
-              const isSelected = selectedFrames.includes(f.id);
-
-              return (
-                <div
-                  class={`frame-item ${isSelected ? 'selected' : ''}`}
-                  ref={isSelected ? frameRowRef : undefined}
-                >
-                  <a
-                    class="frame-name"
-                    onClick={() => handleFrameClick(f.id)}
-                  >
-                    {f.name}
-                  </a>
-                  <Dropdown
-                    contentPosition={fIdx > 4 && fIdx > filteredFrames.length - 5 ? 'up' : 'down'}
-                    isShowing={openedDropdown === f.id}
-                    value={constants.statusOptions.find((s) => s.value === f.status)}
-                    options={constants.statusOptions}
-                    onBtnClick={() => handleDropdown(f.id)}
-                    onItemClick={(status) => handleStatusClick(f.id, status.value)}
-                  />
-                </div>
-              );
-            })
-        }
-
-        {
-          filter.value !== 'all' &&
-          !frames.filter((f) => f.status === filter.value).length &&
-            <div class="empty-state">
-              <h1>😵‍💫</h1>
-              <p>
-                No frames in '{filter.label}'
-              </p>
-            </div>
-        }
-      </div>
+      {navItem === "settings" && (
+        <Settings apiKey={apiKey ? true : false} statuses={statuses} />
+      )}
     </Fragment>
-  )
+  );
 }
 
-export default render(Plugin)
+export default render(Plugin);
