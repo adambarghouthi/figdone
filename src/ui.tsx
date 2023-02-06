@@ -19,6 +19,7 @@ function Plugin(props: {
   const [figDoneUser, setFigDoneUser] = useState<any>();
   const [statuses, setStatuses] = useState<any>();
   const [apiKey, setApiKey] = useState<string>("");
+  const [apiKeyRecId, setApiKeyRecId] = useState<string>("");
 
   const [openedDropdown, setOpenedDropdown] = useState<string>("");
   const [frames, setFrames] = useState<
@@ -42,6 +43,24 @@ function Plugin(props: {
   const handleFilter = (filter: { label: string; value: string }) => {
     setOpenedDropdown("");
     setFilter(filter);
+  };
+
+  const handleSaveStatus = (status: {
+    label: string;
+    value: string;
+    emoji: string;
+    color: string;
+  }) => {
+    const saveStatus = async () => {
+      const statusResult = await airtable("statuses").create({
+        ...status,
+        key: [apiKeyRecId],
+      });
+
+      console.log("success", statusResult);
+    };
+
+    saveStatus();
   };
 
   onmessage = (event) => {
@@ -75,6 +94,7 @@ function Plugin(props: {
 
         setFigDoneUser(user);
         setApiKey(apiKeyResult.data.records[0].fields.hash);
+        setApiKeyRecId(apiKeyResult.data.records[0].id);
       }
     };
 
@@ -161,7 +181,11 @@ function Plugin(props: {
       )}
 
       {navItem === "settings" && (
-        <Settings apiKey={apiKey ? true : false} statuses={statuses} />
+        <Settings
+          apiKey={apiKey ? true : false}
+          statuses={statuses}
+          onSaveStatus={handleSaveStatus}
+        />
       )}
     </Fragment>
   );
