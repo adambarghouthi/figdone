@@ -57,6 +57,24 @@ function Plugin(props: {
         key: [apiKeyRecId],
       });
 
+      const newStatusOptions = [
+        ...statuses.statusOptions,
+        {
+          label: status.label,
+          value: status.value,
+          color: status.color,
+        },
+      ];
+      const newStatusKeyToIcon = {
+        ...statuses.statusKeyToIcon,
+        [status.value]: status.emoji,
+      };
+
+      setStatuses({
+        statusOptions: newStatusOptions,
+        statusKeyToIcon: newStatusKeyToIcon,
+      });
+
       console.log("success", statusResult);
     };
 
@@ -108,6 +126,8 @@ function Plugin(props: {
       const statusResults = await airtable("statuses").select(
         `{keyString}=${apiKey}`
       );
+
+      console.log(statusResults.data.records);
 
       if (statusResults.data.records?.length) {
         const statusOptions: [{ label: string; value: string; color: string }] =
