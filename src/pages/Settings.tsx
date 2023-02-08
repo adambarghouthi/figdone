@@ -10,8 +10,11 @@ import {
   IconEllipsis32,
   IconButton,
   Modal,
+  TextboxAutocomplete,
 } from "@create-figma-plugin/ui";
 import { useEffect, useState } from "preact/hooks";
+import emojis from "emojilib";
+import fuzzysort from "fuzzysort";
 import { statusKeyToIcon } from "../../utils/constants";
 
 interface SettingsProps {
@@ -33,8 +36,12 @@ function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
   const [color, setColor] = useState<string>("");
   const [emoji, setEmoji] = useState<string>("");
   const [name, setName] = useState<string>("");
+  const [options, setOptions] = useState<{ value: string }[]>(
+    Object.keys(emojis).map((key) => ({ value: key }))
+  );
 
-  const [showModal, setShowModal] = useState<boolean>(false);
+  const [showStatusModal, setShowStatusModal] = useState<boolean>(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
   const initialFocus = useInitialFocus();
 
   const handleInput = (e: any) => {
@@ -45,8 +52,12 @@ function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
     console.log("submit api key");
   };
 
-  const handleShowModal = () => {
-    setShowModal(!showModal);
+  const handleShowStatusModal = () => {
+    setShowStatusModal(!showStatusModal);
+  };
+
+  const handleShowApiKeyModal = () => {
+    setShowApiKeyModal(!showApiKeyModal);
   };
 
   const handleColorChange = (e: any) => {
@@ -66,66 +77,77 @@ function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
     }
   }, [apiKey]);
 
+  useEffect(() => {
+    const filterEmojis = async () => {
+      const filteredOptions = Object.keys(emojis)
+        .filter((key) => {
+          if (!emoji) return true;
+
+          const targets = emojis[key];
+          const results = fuzzysort.go(emoji, targets, {
+            threshold: -20, // Don't return matches worse than this (higher is faster)
+            limit: 1, // Don't return more results than this (lower is faster)
+            all: false, // If true, returns all results for an empty search
+          });
+
+          return results.length;
+        })
+        .map((key) => ({
+          value: key,
+        }));
+
+      setOptions(filteredOptions);
+    };
+
+    if (emoji) {
+      filterEmojis();
+    }
+  }, [emoji]);
+
   return (
     <div class="container">
-      {!apiKey && (
-        <div class="form">
-          <Textbox
-            {...initialFocus}
-            onInput={handleInput}
-            placeholder="Enter api key"
-            value={text}
-            variant="border"
-          />
-          <VerticalSpace space="small" />
-          <Button fullWidth onClick={handleSubmit}>
-            Submit
-          </Button>
+      <div class="form">
+        <div class="flex align-items-center justify-content-between">
+          <Text>Custom statuses</Text>
+          <IconButton
+            onClick={apiKey ? handleShowStatusModal : handleShowApiKeyModal}
+          >
+            <IconPlus32 />
+          </IconButton>
         </div>
-      )}
-
-      {apiKey && (
-        <div class="form">
-          <div class="flex align-items-center justify-content-between">
-            <Text>Custom statuses</Text>
-            <IconButton onClick={handleShowModal}>
-              <IconPlus32 />
-            </IconButton>
+        <VerticalSpace space="small" />
+        {statuses?.statusOptions.map((statusOption) => (
+          <div class="custom-status">
+            <div class="flex align-items-center">
+              <div
+                class="status-colour"
+                style={{ backgroundColor: `#${statusOption.color}` }}
+              />
+              <div class="status-name">
+                <Text>{statusOption.label}</Text>
+              </div>
+              <div class="status-emoji">
+                {statuses.statusKeyToIcon[statusOption.value]}
+              </div>
+            </div>
+            <div class="status-options">
+              <a class="status-options-item">Edit</a>
+              <a class="status-options-item">Delete</a>
+            </div>
           </div>
-          <VerticalSpace space="small" />
-          {statuses?.statusOptions.map((statusOption) => (
-            <div class="custom-status">
-              <div class="flex align-items-center">
-                <div
-                  class="status-colour"
-                  style={{ backgroundColor: statusOption.color }}
-                />
-                <div class="status-name">
-                  <Text>{statusOption.label}</Text>
-                </div>
-                <div class="status-emoji">
-                  {statuses.statusKeyToIcon[statusOption.value]}
-                </div>
-              </div>
-              <div class="status-options">
-                <a class="status-options-item">Edit</a>
-                <a class="status-options-item">Delete</a>
-              </div>
-            </div>
-          ))}
-          {!statuses && (
-            <div class="empty-state">
-              <h1>😵‍💫</h1>
-              <p>No custom statuses yet</p>
-            </div>
-          )}
-        </div>
-      )}
+        ))}
+        {!statuses && (
+          <div class="empty-state">
+            <h1>😵‍💫</h1>
+            <p>No custom statuses yet</p>
+          </div>
+        )}
+      </div>
 
       <Modal
-        open={showModal}
+        open={showStatusModal}
         title="Add new status"
-        onCloseButtonClick={handleShowModal}
+        onOverlayClick={handleShowStatusModal}
       >
         <div style={{ height: "auto", padding: "12px", width: "auto" }}>
           <TextboxColor
@@ -137,8 +159,8 @@ function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
             variant="border"
           />
           <VerticalSpace space="small" />
-          <Textbox
-            placeholder="Emoji"
+          <TextboxAutocomplete
+            options={options}
             value={emoji}
             variant="border"
             onChange={handleEmojiChange}
@@ -159,13 +181,35 @@ function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
                 emoji: emoji,
                 color: color,
               });
-              setShowModal(false);
+              setShowStatusModal(false);
             }}
           >
             Save
           </Button>
         </div>
       </Modal>
+
+      {!apiKey && (
+        <Modal
+          open={showApiKeyModal}
+          title="Enter api key to unlock premium features"
+          onCloseButtonClick={handleShowApiKeyModal}
+        >
+          <div style={{ height: "auto", padding: "12px", width: "auto" }}>
+            <Textbox
+              {...initialFocus}
+              onInput={handleInput}
+              placeholder="Enter api key"
+              value={text}
+              variant="border"
+            />
+            <VerticalSpace space="small" />
+            <Button fullWidth onClick={handleSubmit}>
+              Submit
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
