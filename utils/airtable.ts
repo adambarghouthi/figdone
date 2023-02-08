@@ -11,7 +11,7 @@ export default function airtable(base: string) {
   return {
     select: async (formula: string = "") =>
       await axios.get(
-        `${url}?maxRecords=1&view=Grid%20view&filterByFormula=${
+        `${url}?view=Grid%20view&filterByFormula=${
           formula ? encodeURIComponent(formula) : ""
         }`,
         {
