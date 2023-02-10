@@ -15,7 +15,6 @@ import {
 import { useEffect, useState } from "preact/hooks";
 import emojis from "emojilib";
 import fuzzysort from "fuzzysort";
-import { statusKeyToIcon } from "../../utils/constants";
 
 interface SettingsProps {
   apiKey: boolean;
@@ -36,6 +35,7 @@ function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
   const [color, setColor] = useState<string>("");
   const [emoji, setEmoji] = useState<string>("");
   const [name, setName] = useState<string>("");
+  const [statusToEdit, setStatusToEdit] = useState<any>();
   const [options, setOptions] = useState<{ value: string }[]>(
     Object.keys(emojis).map((key) => ({ value: key }))
   );
@@ -65,6 +65,7 @@ function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
   };
 
   const handleEmojiChange = (e: any) => {
+    console.log(e.target.value);
     setEmoji(e.target.value);
   };
 
@@ -104,6 +105,8 @@ function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
     }
   }, [emoji]);
 
+  console.log("statusToEdit", statusToEdit);
+
   return (
     <div class="container">
       <div class="form">
@@ -131,7 +134,18 @@ function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
               </div>
             </div>
             <div class="status-options">
-              <a class="status-options-item">Edit</a>
+              <a
+                class="status-options-item"
+                onClick={() => {
+                  handleShowStatusModal();
+                  setStatusToEdit(statusOption);
+                  setName(statusOption.label);
+                  setEmoji(statuses.statusKeyToIcon[statusOption.value]);
+                  setColor(statusOption.color);
+                }}
+              >
+                Edit
+              </a>
               <a class="status-options-item">Delete</a>
             </div>
           </div>
