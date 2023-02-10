@@ -2,7 +2,6 @@ import { render } from "@create-figma-plugin/ui";
 import { emit } from "@create-figma-plugin/utilities";
 import { Fragment, h } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import { useRef } from "react";
 
 import Frames from "./pages/Frames";
 import Settings from "./pages/Settings";
@@ -74,8 +73,6 @@ function Plugin(props: {
         statusOptions: newStatusOptions,
         statusKeyToIcon: newStatusKeyToIcon,
       });
-
-      console.log("success", statusResult);
     };
 
     saveStatus();
