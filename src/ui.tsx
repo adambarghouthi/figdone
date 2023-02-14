@@ -17,6 +17,7 @@ function Plugin(props: {
   const [figmaUser, setFigmaUser] = useState<string>("");
   const [figDoneUser, setFigDoneUser] = useState<any>();
   const [statuses, setStatuses] = useState<any>();
+  const [refreshStatuses, setRefreshStatuses] = useState<boolean>(false);
   const [apiKey, setApiKey] = useState<string>("");
   const [apiKeyRecId, setApiKeyRecId] = useState<string>("");
 
@@ -44,35 +45,44 @@ function Plugin(props: {
     setFilter(filter);
   };
 
+  const handleDeleteStatus = (id: string) => {
+    const deleteStatus = async () => {
+      const result: any = await airtable("statuses").deleteById(id);
+
+      if (result.data.deleted) {
+        setRefreshStatuses(true);
+      }
+    };
+
+    deleteStatus();
+  };
+
   const handleSaveStatus = (status: {
+    id: string;
     label: string;
     value: string;
     emoji: string;
     color: string;
   }) => {
     const saveStatus = async () => {
-      const statusResult = await airtable("statuses").create({
-        ...status,
-        key: [apiKeyRecId],
-      });
+      const { id, ...rest } = status;
+      let statusResult;
 
-      const newStatusOptions = [
-        ...statuses.statusOptions,
-        {
-          label: status.label,
-          value: status.value,
-          color: status.color,
-        },
-      ];
-      const newStatusKeyToIcon = {
-        ...statuses.statusKeyToIcon,
-        [status.value]: status.emoji,
-      };
+      if (id) {
+        statusResult = await airtable("statuses").updateById(id, {
+          ...rest,
+          key: [apiKeyRecId],
+        });
+      } else {
+        statusResult = await airtable("statuses").create({
+          ...rest,
+          key: [apiKeyRecId],
+        });
+      }
 
-      setStatuses({
-        statusOptions: newStatusOptions,
-        statusKeyToIcon: newStatusKeyToIcon,
-      });
+      console.log(statusResult);
+
+      setRefreshStatuses(true);
     };
 
     saveStatus();
@@ -129,6 +139,7 @@ function Plugin(props: {
       if (statusResults.data.records?.length) {
         const statusOptions: [{ label: string; value: string; color: string }] =
           statusResults.data.records.map((status: any) => ({
+            id: status.id,
             label: status.fields.label,
             value: status.fields.value,
             color: status.fields.color,
@@ -149,10 +160,14 @@ function Plugin(props: {
       }
     };
 
-    if (apiKey) {
+    if (apiKey || refreshStatuses) {
       getStatuses();
     }
-  }, [apiKey]);
+
+    if (refreshStatuses) {
+      setRefreshStatuses(false);
+    }
+  }, [apiKey, refreshStatuses]);
 
   useEffect(() => {
     emit("GET_FIGMA_USER");
@@ -189,21 +204,22 @@ function Plugin(props: {
         )}
       </div>
 
-      {navItem === "frames" && (
+      <div style={{ display: navItem !== "frames" ? "none" : "block" }}>
         <Frames
           filter={filter}
           selectedFrames={selectedFrames}
           frames={frames}
         />
-      )}
+      </div>
 
-      {navItem === "settings" && (
+      <div style={{ display: navItem !== "settings" ? "none" : "block" }}>
         <Settings
           apiKey={apiKey ? true : false}
           statuses={statuses}
           onSaveStatus={handleSaveStatus}
+          onDeleteStatus={handleDeleteStatus}
         />
-      )}
+      </div>
     </Fragment>
   );
 }
