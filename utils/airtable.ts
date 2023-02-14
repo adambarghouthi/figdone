@@ -20,6 +20,18 @@ export default function airtable(base: string) {
           },
         }
       ),
+    updateById: async (id: string, data: any) =>
+      await axios.put(
+        url,
+        {
+          records: [{ id: id, fields: { ...data } }],
+        },
+        {
+          headers: {
+            Authorization: "Bearer keyrSZiPjA2Mt9u0B",
+          },
+        }
+      ),
     create: async (data: any) =>
       await axios
         .post(
@@ -51,5 +63,11 @@ export default function airtable(base: string) {
           }
           console.log(error.config);
         }),
+    deleteById: async (id: string) =>
+      await axios.delete(`${url}/${id}`, {
+        headers: {
+          Authorization: "Bearer keyrSZiPjA2Mt9u0B",
+        },
+      }),
   };
 }
