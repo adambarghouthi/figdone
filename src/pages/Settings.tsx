@@ -19,18 +19,27 @@ import fuzzysort from "fuzzysort";
 interface SettingsProps {
   apiKey: boolean;
   statuses: {
-    statusOptions: [{ label: string; value: string; color: string }];
+    statusOptions: [
+      { label: string; value: string; color: string; id: string }
+    ];
     statusKeyToIcon: { [key: string]: string };
   };
   onSaveStatus: (status: {
+    id: string;
     label: string;
     value: string;
     emoji: string;
     color: string;
   }) => void;
+  onDeleteStatus: (id: string) => void;
 }
 
-function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
+function Settings({
+  apiKey,
+  statuses,
+  onSaveStatus,
+  onDeleteStatus,
+}: SettingsProps) {
   const [text, setText] = useState<string>("");
   const [color, setColor] = useState<string>("");
   const [emoji, setEmoji] = useState<string>("");
@@ -146,7 +155,12 @@ function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
               >
                 Edit
               </a>
-              <a class="status-options-item">Delete</a>
+              <a
+                class="status-options-item"
+                onClick={() => onDeleteStatus(statusOption.id)}
+              >
+                Delete
+              </a>
             </div>
           </div>
         ))}
@@ -190,11 +204,15 @@ function Settings({ apiKey, statuses, onSaveStatus }: SettingsProps) {
           <Button
             onClick={() => {
               onSaveStatus({
+                id: statusToEdit?.id,
                 label: name[0].toUpperCase() + name.substring(1),
                 value: name.split(" ").join("-").toLowerCase(),
                 emoji: emoji,
                 color: color,
               });
+              if (statusToEdit) {
+                setStatusToEdit(null);
+              }
               setShowStatusModal(false);
             }}
           >
