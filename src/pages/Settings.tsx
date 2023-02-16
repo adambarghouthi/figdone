@@ -7,10 +7,10 @@ import {
   useInitialFocus,
   VerticalSpace,
   IconPlus32,
-  IconEllipsis32,
   IconButton,
   Modal,
   TextboxAutocomplete,
+  LoadingIndicator,
 } from "@create-figma-plugin/ui";
 import { useEffect, useState } from "preact/hooks";
 import emojis from "emojilib";
@@ -63,6 +63,12 @@ function Settings({
 
   const handleShowStatusModal = () => {
     setShowStatusModal(!showStatusModal);
+    if (!showStatusModal === false) {
+      setName("");
+      setEmoji("");
+      setColor("");
+      setStatusToEdit(null);
+    }
   };
 
   const handleShowApiKeyModal = () => {
@@ -114,8 +120,6 @@ function Settings({
     }
   }, [emoji]);
 
-  console.log("statusToEdit", statusToEdit);
-
   return (
     <div class="container">
       <div class="form">
@@ -166,18 +170,22 @@ function Settings({
         ))}
         {!statuses && (
           <div class="empty-state">
-            <h1>😵‍💫</h1>
-            <p>No custom statuses yet</p>
+            <h1>
+              <LoadingIndicator />
+            </h1>
+            <p>Fetching statuses...</p>
           </div>
         )}
       </div>
 
       <Modal
         open={showStatusModal}
-        title="Add new status"
+        title={statusToEdit ? "Edit status" : "Add new status"}
         onOverlayClick={handleShowStatusModal}
       >
         <div style={{ height: "auto", padding: "12px", width: "auto" }}>
+          <Text>Status color</Text>
+          <VerticalSpace space="small" />
           <TextboxColor
             hexColor={color}
             hexColorPlaceholder="Color"
@@ -187,15 +195,20 @@ function Settings({
             variant="border"
           />
           <VerticalSpace space="small" />
+          <Text>Status emoji</Text>
+          <VerticalSpace space="small" />
           <TextboxAutocomplete
+            placeholder="Type to search emoji"
             options={options}
             value={emoji}
             variant="border"
             onChange={handleEmojiChange}
           />
           <VerticalSpace space="small" />
+          <Text>Status name</Text>
+          <VerticalSpace space="small" />
           <Textbox
-            placeholder="Name"
+            placeholder="E.x. Done"
             value={name}
             variant="border"
             onChange={handleNameChange}
