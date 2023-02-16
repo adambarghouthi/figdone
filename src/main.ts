@@ -1,12 +1,9 @@
 import {
   on,
-  once,
   showUI,
   traverseNode,
   getParentNode,
 } from "@create-figma-plugin/utilities";
-
-import { statusIcons, statusIconToKey } from "../utils/constants";
 import {
   FocusFrameHandler,
   GetFigmaUserHandler,
@@ -15,16 +12,13 @@ import {
 
 const options = { height: 390, width: 300 };
 
-function getStatus(frame: any) {
+function getStatusIcon(frame: any) {
   const regex = /\[(.*?)]/g;
   const match = regex.exec(frame.name);
 
   const statusIcon = match?.[1] || "";
-  const statusKey = statusIcons.includes(statusIcon)
-    ? statusIconToKey[statusIcon]
-    : "no-status";
 
-  return statusKey;
+  return statusIcon;
 }
 
 function formatFrames() {
@@ -35,7 +29,7 @@ function formatFrames() {
       frames.push({
         id: `${child.id}`,
         name: child.name.replace(/\[(.*?)]/g, ""),
-        status: getStatus(child),
+        statusIcon: getStatusIcon(child),
       });
     }
 
@@ -48,7 +42,7 @@ function formatFrames() {
             frames.push({
               id: `${node.id}`,
               name: node.name.replace(/\[(.*?)]/g, ""),
-              status: getStatus(node),
+              statusIcon: getStatusIcon(node),
             });
             return true;
           }
