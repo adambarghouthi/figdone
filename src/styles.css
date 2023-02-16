@@ -48,6 +48,12 @@
   color: var(--figma-color-text-hover);
 }
 
+.banner {
+  position: fixed;
+  bottom: 0px;
+  width: 100%;
+}
+
 .form {
   padding: 15px;
 }
