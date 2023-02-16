@@ -5,15 +5,20 @@ import { h } from "preact";
 
 import Dropdown from "../components/Dropdown";
 import * as constants from "../../utils/constants";
-import airtable from "../../utils/airtable";
+import { LoadingIndicator } from "@create-figma-plugin/ui";
 
 interface FrameProps {
   filter: { label: string; value: string };
   selectedFrames: string[];
-  frames: { id: string; name: string; status: string }[];
+  frames: { id: string; name: string; statusIcon: string }[];
+  statuses: {
+    statusOptions: { label: string; value: string; color: string }[];
+    statusKeyToIcon: { [key: string]: string };
+    statusIconToKey: { [key: string]: string };
+  };
 }
 
-function Frames({ filter, selectedFrames, frames }: FrameProps) {
+function Frames({ filter, selectedFrames, frames, statuses }: FrameProps) {
   const [openedDropdown, setOpenedDropdown] = useState<string>("");
   const frameRowRef = useRef<HTMLDivElement>(null);
 
@@ -23,7 +28,7 @@ function Frames({ filter, selectedFrames, frames }: FrameProps) {
 
   const handleStatusClick = (frameId: string, status: string) => {
     setOpenedDropdown("");
-    emit("UPDATE_STATUS", frameId, constants.statusKeyToIcon[status]);
+    emit("UPDATE_STATUS", frameId, statuses.statusKeyToIcon[status]);
   };
 
   const handleDropdown = (id: string) => {
@@ -47,11 +52,27 @@ function Frames({ filter, selectedFrames, frames }: FrameProps) {
     setOpenedDropdown("");
   }, [filter]);
 
+  if (!statuses) {
+    return (
+      <div class="container">
+        <div class="empty-state">
+          <h1>
+            <LoadingIndicator />
+          </h1>
+          <p>Making things nice...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div class="container">
       {frames
         .filter((f) => {
-          if (filter.value === "all" || f.status === filter.value) {
+          if (
+            filter.value === "all" ||
+            statuses.statusIconToKey[f.statusIcon] === filter.value
+          ) {
             return true;
           }
 
@@ -73,10 +94,18 @@ function Frames({ filter, selectedFrames, frames }: FrameProps) {
                   fIdx > 4 && fIdx > filteredFrames.length - 5 ? "up" : "down"
                 }
                 isShowing={openedDropdown === f.id}
-                value={constants.statusOptions.find(
-                  (s) => s.value === f.status
-                )}
-                options={constants.statusOptions}
+                value={
+                  statuses.statusOptions.find(
+                    (s) => s.value === statuses.statusIconToKey[f.statusIcon]
+                  ) ||
+                  constants.statusOptions.find((s) => s.value === "no-status")
+                }
+                options={statuses.statusOptions}
+                color={
+                  statuses.statusOptions.find(
+                    (s) => s.value === statuses.statusIconToKey[f.statusIcon]
+                  )?.color
+                }
                 onBtnClick={() => handleDropdown(f.id)}
                 onItemClick={(status) => handleStatusClick(f.id, status.value)}
               />
@@ -85,7 +114,9 @@ function Frames({ filter, selectedFrames, frames }: FrameProps) {
         })}
 
       {filter.value !== "all" &&
-        !frames.filter((f) => f.status === filter.value).length && (
+        !frames.filter(
+          (f) => statuses.statusIconToKey[f.statusIcon] === filter.value
+        ).length && (
           <div class="empty-state">
             <h1>😵‍💫</h1>
             <p>No frames in '{filter.label}'</p>
