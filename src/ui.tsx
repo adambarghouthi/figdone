@@ -1,4 +1,9 @@
-import { render } from "@create-figma-plugin/ui";
+import {
+  render,
+  LoadingIndicator,
+  Banner,
+  IconCheckCircle32,
+} from "@create-figma-plugin/ui";
 import { emit } from "@create-figma-plugin/utilities";
 import { Fragment, h } from "preact";
 import { useEffect, useState } from "preact/hooks";
@@ -12,8 +17,10 @@ import "!./styles.css";
 import airtable from "../utils/airtable";
 
 function Plugin(props: {
-  initialFrames: { id: string; name: string; status: string }[];
+  initialFrames: { id: string; name: string; statusIcon: string }[];
 }) {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [success, setSuccess] = useState<string>("");
   const [figmaUser, setFigmaUser] = useState<string>("");
   const [figDoneUser, setFigDoneUser] = useState<any>();
   const [statuses, setStatuses] = useState<any>();
@@ -23,7 +30,7 @@ function Plugin(props: {
 
   const [openedDropdown, setOpenedDropdown] = useState<string>("");
   const [frames, setFrames] = useState<
-    { id: string; name: string; status: string }[]
+    { id: string; name: string; statusIcon: string }[]
   >(props.initialFrames);
   const [selectedFrames, setSelectedFrames] = useState<string[]>([]);
   const [filter, setFilter] = useState<{ label: string; value: string }>({
@@ -31,6 +38,13 @@ function Plugin(props: {
     value: "all",
   });
   const [navItem, setNavItem] = useState<string>("frames");
+
+  const handleSuccess = (msg: string) => {
+    setSuccess(msg);
+    setTimeout(() => {
+      setSuccess("");
+    }, 2000);
+  };
 
   const handleDropdown = (id: string) => {
     if (id === openedDropdown) {
@@ -47,13 +61,22 @@ function Plugin(props: {
 
   const handleDeleteStatus = (id: string) => {
     const deleteStatus = async () => {
-      const result: any = await airtable("statuses").deleteById(id);
+      let result;
 
-      if (result.data.deleted) {
+      try {
+        result = await airtable("statuses").deleteById(id);
+      } catch (error) {
+        console.log(error);
+      }
+
+      if (result?.data.deleted) {
+        handleSuccess("Deleted successfully.");
+        setLoading(false);
         setRefreshStatuses(true);
       }
     };
 
+    setLoading(true);
     deleteStatus();
   };
 
@@ -68,23 +91,30 @@ function Plugin(props: {
       const { id, ...rest } = status;
       let statusResult;
 
-      if (id) {
-        statusResult = await airtable("statuses").updateById(id, {
-          ...rest,
-          key: [apiKeyRecId],
-        });
-      } else {
-        statusResult = await airtable("statuses").create({
-          ...rest,
-          key: [apiKeyRecId],
-        });
+      try {
+        if (id) {
+          statusResult = await airtable("statuses").updateById(id, {
+            ...rest,
+            key: [apiKeyRecId],
+          });
+        } else {
+          statusResult = await airtable("statuses").create({
+            ...rest,
+            key: [apiKeyRecId],
+          });
+        }
+
+        handleSuccess("Saved successfully.");
+        setLoading(false);
+        setRefreshStatuses(true);
+      } catch (error) {
+        console.log(error);
       }
 
-      console.log(statusResult);
-
-      setRefreshStatuses(true);
+      // console.log(statusResult);
     };
 
+    setLoading(true);
     saveStatus();
   };
 
@@ -120,6 +150,12 @@ function Plugin(props: {
         setFigDoneUser(user);
         setApiKey(apiKeyResult.data.records[0].fields.hash);
         setApiKeyRecId(apiKeyResult.data.records[0].id);
+      } else {
+        setStatuses({
+          statusOptions: constants.statusOptions,
+          statusKeyToIcon: constants.statusKeyToIcon,
+          statusIconToKey: constants.statusIconToKey,
+        });
       }
     };
 
@@ -134,16 +170,17 @@ function Plugin(props: {
         `{keyString}=${apiKey}`
       );
 
-      console.log(statusResults.data.records);
-
       if (statusResults.data.records?.length) {
-        const statusOptions: [{ label: string; value: string; color: string }] =
-          statusResults.data.records.map((status: any) => ({
-            id: status.id,
-            label: status.fields.label,
-            value: status.fields.value,
-            color: status.fields.color,
-          }));
+        const statusOptions: { label: string; value: string; color: string }[] =
+          [
+            ...statusResults.data.records.map((status: any) => ({
+              id: status.id,
+              label: status.fields.label,
+              value: status.fields.value,
+              color: status.fields.color,
+            })),
+            { label: "No status", value: "no-status" },
+          ];
 
         const statusKeyToIcon: { [key: string]: string } = {};
 
@@ -153,9 +190,18 @@ function Plugin(props: {
           }
         );
 
+        const statusIconToKey: { [key: string]: string } = {};
+
+        statusResults.data.records.forEach(
+          (status: { fields: { value: string; emoji: string } }) => {
+            statusIconToKey[status.fields.emoji] = status.fields.value;
+          }
+        );
+
         setStatuses({
           statusOptions,
           statusKeyToIcon,
+          statusIconToKey,
         });
       }
     };
@@ -209,6 +255,7 @@ function Plugin(props: {
           filter={filter}
           selectedFrames={selectedFrames}
           frames={frames}
+          statuses={statuses}
         />
       </div>
 
@@ -220,6 +267,20 @@ function Plugin(props: {
           onDeleteStatus={handleDeleteStatus}
         />
       </div>
+
+      {loading && (
+        <div class="banner">
+          <Banner icon={<LoadingIndicator />}>Loading...</Banner>
+        </div>
+      )}
+
+      {success && (
+        <div class="banner">
+          <Banner icon={<IconCheckCircle32 />} variant="success">
+            {success}
+          </Banner>
+        </div>
+      )}
     </Fragment>
   );
 }
