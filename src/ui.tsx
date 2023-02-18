@@ -93,10 +93,21 @@ function Plugin(props: {
 
       try {
         if (id) {
+          const oldStatus = statuses.statusOptions.find(
+            (status: any) => status.id === id
+          );
+          const updatableFrames = frames
+            .filter(
+              (f) => f.statusIcon === statuses.statusKeyToIcon[oldStatus.value]
+            )
+            .map((f) => f.id);
+
           statusResult = await airtable("statuses").updateById(id, {
             ...rest,
             key: [apiKeyRecId],
           });
+
+          emit("UPDATE_STATUS", updatableFrames, status.emoji);
         } else {
           statusResult = await airtable("statuses").create({
             ...rest,
@@ -171,16 +182,20 @@ function Plugin(props: {
       );
 
       if (statusResults.data.records?.length) {
-        const statusOptions: { label: string; value: string; color: string }[] =
-          [
-            ...statusResults.data.records.map((status: any) => ({
-              id: status.id,
-              label: status.fields.label,
-              value: status.fields.value,
-              color: status.fields.color,
-            })),
-            { label: "No status", value: "no-status" },
-          ];
+        const statusOptions: {
+          id: string;
+          label: string;
+          value: string;
+          color: string;
+        }[] = [
+          ...statusResults.data.records.map((status: any) => ({
+            id: status.id,
+            label: status.fields.label,
+            value: status.fields.value,
+            color: status.fields.color,
+          })),
+          { label: "No status", value: "no-status" },
+        ];
 
         const statusKeyToIcon: { [key: string]: string } = {};
 

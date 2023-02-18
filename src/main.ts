@@ -119,23 +119,33 @@ export default function () {
   });
   on<UpdateStatusHandler>(
     "UPDATE_STATUS",
-    async function (frameId: string, icon: string) {
-      for (let child of figma.currentPage.children) {
+    async function (frameId: string | string[], icon: string) {
+      for (let i = 0; i < figma.currentPage.children.length; i += 1) {
+        const child = figma.currentPage.children[i];
         let frame;
 
         if (child.type === "SECTION") {
           frame = child.children.find((c) => c.id === frameId);
         }
 
-        if (child.id === frameId) {
-          frame = child;
+        if (Array.isArray(frameId)) {
+          if (frameId.includes(child.id)) {
+            frame = child;
+          }
+        } else {
+          if (child.id === frameId) {
+            frame = child;
+          }
         }
 
         if (frame) {
           const regex = /\[(.*?)]/g;
           const strippedName = frame.name.replace(regex, "").trim();
           frame.name = icon ? `[${icon}] ${strippedName}` : strippedName;
-          break;
+
+          if (!Array.isArray(frameId)) {
+            break;
+          }
         }
       }
 
