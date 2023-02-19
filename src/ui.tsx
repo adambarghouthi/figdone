@@ -21,7 +21,7 @@ function Plugin(props: {
 }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [success, setSuccess] = useState<string>("");
-  const [figmaUser, setFigmaUser] = useState<string>("");
+  const [figmaUser, setFigmaUser] = useState<any>();
   const [figDoneUser, setFigDoneUser] = useState<any>();
   const [statuses, setStatuses] = useState<any>();
   const [refreshStatuses, setRefreshStatuses] = useState<boolean>(false);
@@ -129,6 +129,36 @@ function Plugin(props: {
     saveStatus();
   };
 
+  const handleSubmitApiKey = (key: string) => {
+    const submitApiKey = async () => {
+      const apiKeyResult = await airtable("keys").select(
+        `AND({hash}=${key},{userNum}<{licenseNum})`
+      );
+
+      if (apiKeyResult.data.records.length) {
+        const userResult: any = await airtable("users").create({
+          figmaId: figmaUser.id,
+          name: figmaUser.name,
+          keys: [apiKeyResult.data.records[0].id],
+        });
+
+        const user = userResult.data.records?.[0];
+
+        if (user) {
+          setFigDoneUser(user);
+          setApiKey(apiKeyResult.data.records[0].fields.hash);
+          setApiKeyRecId(apiKeyResult.data.records[0].id);
+        }
+
+        handleSuccess("Custom statuses unlocked!");
+        setLoading(false);
+      }
+    };
+
+    setLoading(true);
+    submitApiKey();
+  };
+
   onmessage = (event) => {
     const { message, ...data } = event.data.pluginMessage;
 
@@ -148,7 +178,7 @@ function Plugin(props: {
   useEffect(() => {
     const getData = async () => {
       const userResult = await airtable("users").select(
-        `{figmaId}=${figmaUser}`
+        `{figmaId}=${figmaUser.id}`
       );
 
       const user = userResult.data.records?.[0];
@@ -280,6 +310,7 @@ function Plugin(props: {
           statuses={statuses}
           onSaveStatus={handleSaveStatus}
           onDeleteStatus={handleDeleteStatus}
+          onSaveApiKey={handleSubmitApiKey}
         />
       </div>
 
