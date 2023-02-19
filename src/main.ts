@@ -95,7 +95,7 @@ export default function () {
   on<GetFigmaUserHandler>("GET_FIGMA_USER", function () {
     figma.ui.postMessage({
       message: "set-user",
-      user: figma.currentUser?.id || "",
+      user: figma.currentUser,
     });
   });
   on<FocusFrameHandler>("FOCUS_FRAME", function (frameId: string) {
