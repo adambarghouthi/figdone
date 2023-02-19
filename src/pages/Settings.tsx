@@ -32,6 +32,7 @@ interface SettingsProps {
     color: string;
   }) => void;
   onDeleteStatus: (id: string) => void;
+  onSaveApiKey: (key: string) => void;
 }
 
 function Settings({
@@ -39,8 +40,9 @@ function Settings({
   statuses,
   onSaveStatus,
   onDeleteStatus,
+  onSaveApiKey,
 }: SettingsProps) {
-  const [text, setText] = useState<string>("");
+  const [apiKeyText, setApiKeyText] = useState<string>("");
   const [color, setColor] = useState<string>("");
   const [emoji, setEmoji] = useState<string>("");
   const [name, setName] = useState<string>("");
@@ -53,12 +55,13 @@ function Settings({
   const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
   const initialFocus = useInitialFocus();
 
-  const handleInput = (e: any) => {
-    setText(e.target.value.trim());
+  const handleApiKeyChange = (e: any) => {
+    setApiKeyText(e.target.value.trim());
   };
 
   const handleSubmit = () => {
-    console.log("submit api key");
+    onSaveApiKey(apiKeyText);
+    handleShowApiKeyModal();
   };
 
   const handleShowStatusModal = () => {
@@ -147,24 +150,32 @@ function Settings({
               </div>
             </div>
             <div class="status-options">
-              <a
-                class="status-options-item"
-                onClick={() => {
-                  handleShowStatusModal();
-                  setStatusToEdit(statusOption);
-                  setName(statusOption.label);
-                  setEmoji(statuses.statusKeyToIcon[statusOption.value]);
-                  setColor(statusOption.color);
-                }}
-              >
-                Edit
-              </a>
-              <a
-                class="status-options-item"
-                onClick={() => onDeleteStatus(statusOption.id)}
-              >
-                Delete
-              </a>
+              {statusOption.value !== "no-status" && (
+                <a
+                  class="status-options-item"
+                  onClick={() => {
+                    if (apiKey) {
+                      handleShowStatusModal();
+                      setStatusToEdit(statusOption);
+                      setName(statusOption.label);
+                      setEmoji(statuses.statusKeyToIcon[statusOption.value]);
+                      setColor(statusOption.color);
+                    } else {
+                      handleShowApiKeyModal();
+                    }
+                  }}
+                >
+                  Edit
+                </a>
+              )}
+              {statusOption.value !== "no-status" && (
+                <a
+                  class="status-options-item"
+                  onClick={() => onDeleteStatus(statusOption.id)}
+                >
+                  Delete
+                </a>
+              )}
             </div>
           </div>
         ))}
@@ -183,7 +194,7 @@ function Settings({
         title={statusToEdit ? "Edit status" : "Add new status"}
         onOverlayClick={handleShowStatusModal}
       >
-        <div style={{ height: "auto", padding: "12px", width: "auto" }}>
+        <div style={{ height: "auto", padding: "12px", width: "240px" }}>
           <Text>Status color</Text>
           <VerticalSpace space="small" />
           <TextboxColor
@@ -237,15 +248,15 @@ function Settings({
       {!apiKey && (
         <Modal
           open={showApiKeyModal}
-          title="Enter api key to unlock premium features"
+          title="Unlock custom statuses"
           onCloseButtonClick={handleShowApiKeyModal}
         >
-          <div style={{ height: "auto", padding: "12px", width: "auto" }}>
+          <div style={{ height: "auto", padding: "12px", width: "240px" }}>
             <Textbox
               {...initialFocus}
-              onInput={handleInput}
+              onInput={handleApiKeyChange}
               placeholder="Enter api key"
-              value={text}
+              value={apiKeyText}
               variant="border"
             />
             <VerticalSpace space="small" />
