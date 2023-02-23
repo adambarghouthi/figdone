@@ -3,5 +3,6 @@
   "compilerOptions": {
     "typeRoots": ["node_modules/@figma", "node_modules/@types"]
   },
+  "esModuleInterop": true,
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

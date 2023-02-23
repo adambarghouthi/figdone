@@ -1,20 +1,24 @@
-import { on, once, showUI, traverseNode, getParentNode } from '@create-figma-plugin/utilities'
-
-import { statusIcons, statusIconToKey } from '../utils/constants';
-import { FocusFrameHandler, UpdateStatusHandler } from './types'
+import {
+  on,
+  showUI,
+  traverseNode,
+  getParentNode,
+} from "@create-figma-plugin/utilities";
+import {
+  FocusFrameHandler,
+  GetFigmaUserHandler,
+  UpdateStatusHandler,
+} from "./types";
 
 const options = { height: 390, width: 300 };
 
-function getStatus(frame:any) {
+function getStatusIcon(frame: any) {
   const regex = /\[(.*?)]/g;
   const match = regex.exec(frame.name);
 
-  const statusIcon = match?.[1] || '';
-  const statusKey = statusIcons.includes(statusIcon)
-    ? statusIconToKey[statusIcon]
-    : 'no-status';
+  const statusIcon = match?.[1] || "";
 
-  return statusKey;
+  return statusIcon;
 }
 
 function formatFrames() {
@@ -24,23 +28,27 @@ function formatFrames() {
     if (child.type === "FRAME") {
       frames.push({
         id: `${child.id}`,
-        name: child.name.replace(/\[(.*?)]/g, ''),
-        status: getStatus(child)
+        name: child.name.replace(/\[(.*?)]/g, ""),
+        statusIcon: getStatusIcon(child),
       });
     }
 
     if (child.type === "SECTION") {
-      traverseNode(child, () => {}, (node) => {
-        if (node.type === "FRAME") {
-          frames.push({
-            id: `${node.id}`,
-            name: node.name.replace(/\[(.*?)]/g, ''),
-            status: getStatus(node)
-          });
-          return true;
+      traverseNode(
+        child,
+        () => {},
+        (node) => {
+          if (node.type === "FRAME") {
+            frames.push({
+              id: `${node.id}`,
+              name: node.name.replace(/\[(.*?)]/g, ""),
+              statusIcon: getStatusIcon(node),
+            });
+            return true;
+          }
+          return false;
         }
-        return false;
-      });
+      );
     }
   }
 
@@ -48,15 +56,17 @@ function formatFrames() {
 }
 
 export default function () {
-  figma.on('selectionchange', () => {
+  figma.on("selectionchange", () => {
     const { selection } = figma.currentPage;
 
     const selectedFrames = selection.filter((s) => {
       const parentNode = getParentNode(s);
 
-      if (s.type === "FRAME" &&
-        (parentNode.type === "PAGE" || parentNode.type === "SECTION")) {
-          return true;
+      if (
+        s.type === "FRAME" &&
+        (parentNode.type === "PAGE" || parentNode.type === "SECTION")
+      ) {
+        return true;
       }
 
       return false;
@@ -65,29 +75,45 @@ export default function () {
     const formattedSelectedFrames = selectedFrames.map((s) => s.id);
 
     figma.ui.postMessage({
-      message: 'select-frames',
-      selectedFrames: formattedSelectedFrames
+      message: "select-frames",
+      selectedFrames: formattedSelectedFrames,
     });
 
     figma.ui.postMessage({
-      message: 'update-frames',
-      frames: formatFrames()
+      message: "update-frames",
+      frames: formatFrames(),
     });
   });
 
   figma.on("currentpagechange", () => {
     figma.ui.postMessage({
-      message: 'update-frames',
-      frames: formatFrames()
+      message: "update-frames",
+      frames: formatFrames(),
     });
   });
 
-  on<FocusFrameHandler>('FOCUS_FRAME', function (frameId:string) {
+  on<GetFigmaUserHandler>("GET_FIGMA_USER", function () {
+    figma.ui.postMessage({
+      message: "set-user",
+      user: figma.currentUser,
+    });
+  });
+  on<FocusFrameHandler>("FOCUS_FRAME", function (frameId: string) {
     for (let child of figma.currentPage.children) {
       let frame;
 
-      if (child.type === 'SECTION') {
-        frame = child.children.find((c) => c.id === frameId);
+      if (child.type === "SECTION") {
+        traverseNode(
+          child,
+          () => {},
+          (node) => {
+            if (node.type === "FRAME" && node.id === frameId) {
+              frame = node;
+              return true;
+            }
+            return false;
+          }
+        );
       }
 
       if (child.id === frameId) {
@@ -100,33 +126,54 @@ export default function () {
         break;
       }
     }
-  })
-  on<UpdateStatusHandler>('UPDATE_STATUS', async function (frameId:string, icon:string) {
-    for (let child of figma.currentPage.children) {
-      let frame;
+  });
+  on<UpdateStatusHandler>(
+    "UPDATE_STATUS",
+    async function (frameId: string | string[], icon: string) {
+      for (let i = 0; i < figma.currentPage.children.length; i += 1) {
+        const child = figma.currentPage.children[i];
+        let frame;
 
-      if (child.type === 'SECTION') {
-        frame = child.children.find((c) => c.id === frameId);
+        if (child.type === "SECTION") {
+          traverseNode(
+            child,
+            () => {},
+            (node) => {
+              if (node.type === "FRAME" && node.id === frameId) {
+                frame = node;
+                return true;
+              }
+              return false;
+            }
+          );
+        }
+
+        if (Array.isArray(frameId)) {
+          if (frameId.includes(child.id)) {
+            frame = child;
+          }
+        } else {
+          if (child.id === frameId) {
+            frame = child;
+          }
+        }
+
+        if (frame) {
+          const regex = /\[(.*?)]/g;
+          const strippedName = frame.name.replace(regex, "").trim();
+          frame.name = icon ? `[${icon}] ${strippedName}` : strippedName;
+
+          if (!Array.isArray(frameId)) {
+            break;
+          }
+        }
       }
 
-      if (child.id === frameId) {
-        frame = child;
-      }
-
-      if (frame) {
-        const regex = /\[(.*?)]/g;
-        const strippedName = frame.name.replace(regex, "").trim();
-        frame.name = icon
-            ? `[${icon}] ${strippedName}`
-            : strippedName;
-        break;
-      }
+      figma.ui.postMessage({
+        message: "update-frames",
+        frames: formatFrames(),
+      });
     }
-
-    figma.ui.postMessage({
-      message: 'update-frames',
-      frames: formatFrames()
-    });
-  })
-  showUI(options, { initialFrames: formatFrames() })
+  );
+  showUI(options, { initialFrames: formatFrames() });
 }
