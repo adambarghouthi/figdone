@@ -103,7 +103,17 @@ export default function () {
       let frame;
 
       if (child.type === "SECTION") {
-        frame = child.children.find((c) => c.id === frameId);
+        traverseNode(
+          child,
+          () => {},
+          (node) => {
+            if (node.type === "FRAME" && node.id === frameId) {
+              frame = node;
+              return true;
+            }
+            return false;
+          }
+        );
       }
 
       if (child.id === frameId) {
@@ -125,7 +135,17 @@ export default function () {
         let frame;
 
         if (child.type === "SECTION") {
-          frame = child.children.find((c) => c.id === frameId);
+          traverseNode(
+            child,
+            () => {},
+            (node) => {
+              if (node.type === "FRAME" && node.id === frameId) {
+                frame = node;
+                return true;
+              }
+              return false;
+            }
+          );
         }
 
         if (Array.isArray(frameId)) {
