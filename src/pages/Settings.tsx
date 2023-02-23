@@ -141,7 +141,12 @@ function Settings({
             <div class="flex align-items-center">
               <div
                 class="status-colour"
-                style={{ backgroundColor: `#${statusOption.color}` }}
+                style={
+                  (statusOption.value !== "no-status" && {
+                    backgroundColor: `#${statusOption.color}`,
+                  }) ||
+                  {}
+                }
               />
               <div class="status-name">
                 <Text>{statusOption.label}</Text>
