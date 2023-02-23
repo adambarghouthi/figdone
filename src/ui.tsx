@@ -285,10 +285,11 @@ function Plugin(props: {
           <Dropdown
             isShowing={openedDropdown === "filter"}
             value={filter}
-            options={[
-              { label: "All", value: "all" },
-              ...constants.statusOptions,
-            ]}
+            options={
+              statuses
+                ? [{ label: "All", value: "all" }, ...statuses.statusOptions]
+                : [{ label: "All", value: "all" }, ...constants.statusOptions]
+            }
             onBtnClick={() => handleDropdown("filter")}
             onItemClick={handleFilter}
           />
