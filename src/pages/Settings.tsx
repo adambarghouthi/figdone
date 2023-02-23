@@ -171,7 +171,13 @@ function Settings({
               {statusOption.value !== "no-status" && (
                 <a
                   class="status-options-item"
-                  onClick={() => onDeleteStatus(statusOption.id)}
+                  onClick={() => {
+                    if (apiKey) {
+                      onDeleteStatus(statusOption.id);
+                    } else {
+                      handleShowApiKeyModal();
+                    }
+                  }}
                 >
                   Delete
                 </a>
@@ -194,15 +200,15 @@ function Settings({
         title={statusToEdit ? "Edit status" : "Add new status"}
         onOverlayClick={handleShowStatusModal}
       >
-        <div style={{ height: "auto", padding: "12px", width: "240px" }}>
+        <div style={{ height: "auto", padding: "12px", width: "auto" }}>
           <Text>Status color</Text>
           <VerticalSpace space="small" />
           <TextboxColor
-            hexColor={color}
+            hexColor={color || "FFFFFF"}
             hexColorPlaceholder="Color"
             onHexColorInput={handleColorChange}
             onOpacityInput={() => {}}
-            opacity="100"
+            opacity={!color ? "0" : "100"}
             variant="border"
           />
           <VerticalSpace space="small" />
