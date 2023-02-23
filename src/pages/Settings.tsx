@@ -11,6 +11,7 @@ import {
   Modal,
   TextboxAutocomplete,
   LoadingIndicator,
+  Link,
 } from "@create-figma-plugin/ui";
 import { useEffect, useState } from "preact/hooks";
 import emojis from "emojilib";
@@ -269,6 +270,12 @@ function Settings({
             <Button fullWidth onClick={handleSubmit}>
               Submit
             </Button>
+            <VerticalSpace space="small" />
+            <Text>
+              <Link href="https://pragmatics.studio/figdone" target="_blank">
+                Get a license key to unlock custom statuses.
+              </Link>
+            </Text>
           </div>
         </Modal>
       )}
