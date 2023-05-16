@@ -132,7 +132,7 @@ function Plugin(props: {
   const handleSubmitApiKey = (key: string) => {
     const submitApiKey = async () => {
       const apiKeyResult = await airtable("keys").select(
-        `AND({hash}=${key},{userNum}<{licenseNum})`
+        `AND({hash}='${key}',{userNum}<{licenseNum})`
       );
 
       if (apiKeyResult.data.records.length) {
@@ -178,14 +178,14 @@ function Plugin(props: {
   useEffect(() => {
     const getData = async () => {
       const userResult = await airtable("users").select(
-        `{figmaId}=${figmaUser.id}`
+        `{figmaId}='${figmaUser.id}'`
       );
 
       const user = userResult.data.records?.[0];
 
       if (user) {
         const apiKeyResult = await airtable("keys").select(
-          `RECORD_ID()="${user.fields.keys[0]}"`
+          `RECORD_ID()='${user.fields.keys[0]}'`
         );
 
         setFigDoneUser(user);
@@ -208,7 +208,7 @@ function Plugin(props: {
   useEffect(() => {
     const getStatuses = async () => {
       const statusResults = await airtable("statuses").select(
-        `{keyString}=${apiKey}`
+        `{keyString}='${apiKey}'`
       );
 
       if (statusResults.data.records?.length) {
