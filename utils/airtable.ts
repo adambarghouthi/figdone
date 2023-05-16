@@ -16,7 +16,8 @@ export default function airtable(base: string) {
         }`,
         {
           headers: {
-            Authorization: "Bearer keyrSZiPjA2Mt9u0B",
+            Authorization:
+              "Bearer pat17fQZ0hv2YWqtu.097ddc97fab2bfa4babf00fa5f4e41137dfa5b0fe221893d5a3a646d5b6076cf",
           },
         }
       ),
@@ -28,7 +29,8 @@ export default function airtable(base: string) {
         },
         {
           headers: {
-            Authorization: "Bearer keyrSZiPjA2Mt9u0B",
+            Authorization:
+              "Bearer pat17fQZ0hv2YWqtu.097ddc97fab2bfa4babf00fa5f4e41137dfa5b0fe221893d5a3a646d5b6076cf",
           },
         }
       ),
@@ -41,7 +43,8 @@ export default function airtable(base: string) {
           },
           {
             headers: {
-              Authorization: "Bearer keyrSZiPjA2Mt9u0B",
+              Authorization:
+                "Bearer pat17fQZ0hv2YWqtu.097ddc97fab2bfa4babf00fa5f4e41137dfa5b0fe221893d5a3a646d5b6076cf",
             },
           }
         )
