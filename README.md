@@ -1,4 +1,4 @@
-# React Editor
+![9c87bd799cc1118e98db1eecb73920b7666d4d18](https://github.com/user-attachments/assets/a55d0792-a882-41f9-b5ac-e97f03e4b3da)
 
 ## Development guide
 
